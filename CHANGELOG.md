@@ -12,7 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities
 
-## [1.0.0] - 201.01.29
+## [1.0.1] - 2022.05.05
+
+### Changed
+
+- Fixed bug in MySQL adapter when passing options.
+
+## [1.0.0] - 2021.01.29
 
 ### Added
 

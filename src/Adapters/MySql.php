@@ -54,13 +54,15 @@ class MySql implements AdapterInterface
 
         $dsn = 'mysql:host=' . $config['host'] . ';port= ' . $config['port'] . ';dbname=' . $config['database'];
 
+        $options = self::$default_options;
+
         if (isset($config['options'])) {
 
-            $options = array_merge(self::$default_options, $config['options']);
+            foreach ($config['options'] as $k => $v) {
 
-        } else {
+                $options[$k] = $v;
 
-            $options = self::$default_options;
+            }
 
         }
 
