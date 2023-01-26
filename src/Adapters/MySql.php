@@ -1,12 +1,5 @@
 <?php
 
-/**
- * @package simple-pdo
- * @link https://github.com/bayfrontmedia/simple-pdo
- * @author John Robinson <john@bayfrontmedia.com>
- * @copyright 2020 Bayfront Media
- */
-
 namespace Bayfront\PDO\Adapters;
 
 use Bayfront\ArrayHelpers\Arr;
@@ -19,7 +12,7 @@ use PDOException;
 class MySql implements AdapterInterface
 {
 
-    private static $required_config_keys = [
+    private static array $required_config_keys = [
         'host',
         'port',
         'database',
@@ -27,7 +20,7 @@ class MySql implements AdapterInterface
         'password'
     ];
 
-    private static $default_options = [
+    private static array $default_options = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_PERSISTENT => false
     ];

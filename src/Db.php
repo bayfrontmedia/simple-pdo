@@ -1,12 +1,5 @@
 <?php
 
-/**
- * @package simple-pdo
- * @link https://github.com/bayfrontmedia/simple-pdo
- * @author John Robinson <john@bayfrontmedia.com>
- * @copyright 2020 Bayfront Media
- */
-
 namespace Bayfront\PDO;
 
 use Bayfront\PDO\Exceptions\InvalidDatabaseException;
@@ -20,11 +13,11 @@ use PDOStatement;
 class Db
 {
 
-    private static $db_connections = []; // Db connections as PDO objects
+    private static array $db_connections = []; // Db connections as PDO objects
 
-    private $default_db_name;
+    private string $default_db_name;
 
-    private $current_db_name;
+    private string $current_db_name;
 
     /**
      * Constructor.
@@ -254,13 +247,13 @@ class Db
      * ############################################################
      */
 
-    private $query_start; // Microtime for query start
+    private mixed $query_start; // Microtime for query start
 
-    private $stmt; // PDOStatement object
+    private mixed $stmt; // PDOStatement object
 
-    private $raw_query = ''; // Last raw query
+    private string $raw_query = ''; // Last raw query
 
-    private $query_durations = []; // Records duration to execute each query
+    private array $query_durations = []; // Records duration to execute each query
 
     /**
      * Resets all query-specific data and begins timer for current query.
@@ -316,28 +309,12 @@ class Db
                     $placeholder = ':' . $placeholder;
                 }
 
-                switch ($value) {
-
-                    case is_bool($value):
-
-                        $type = PDO::PARAM_BOOL;
-                        break;
-
-                    case is_null($value):
-
-                        $type = PDO::PARAM_NULL;
-                        break;
-
-                    case is_int($value):
-
-                        $type = PDO::PARAM_INT;
-                        break;
-
-                    default:
-
-                        $type = PDO::PARAM_STR;
-
-                }
+                $type = match ($value) {
+                    is_bool($value) => PDO::PARAM_BOOL,
+                    is_null($value) => PDO::PARAM_NULL,
+                    is_int($value) => PDO::PARAM_INT,
+                    default => PDO::PARAM_STR,
+                };
 
                 $this->stmt->bindValue($placeholder, $value, $type);
 
@@ -404,14 +381,14 @@ class Db
      * @throws QueryException
      */
 
-    public function select(string $query, array $params = [], bool $return_array = true)
+    public function select(string $query, array $params = [], bool $return_array = true): mixed
     {
 
         try {
 
             $this->query($query, $params);
 
-            if (true == $return_array) {
+            if ($return_array) {
 
                 return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -439,14 +416,14 @@ class Db
      * @throws QueryException
      */
 
-    public function row(string $query, array $params = [], bool $return_array = true)
+    public function row(string $query, array $params = [], bool $return_array = true): mixed
     {
 
         try {
 
             $this->query($query, $params);
 
-            if (true == $return_array) {
+            if ($return_array) {
 
                 return $this->stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -473,7 +450,7 @@ class Db
      * @throws QueryException
      */
 
-    public function single(string $query, array $params = [])
+    public function single(string $query, array $params = []): mixed
     {
 
         try {
@@ -602,9 +579,9 @@ class Db
 
             }
 
-            $query = rtrim($query, ' AND ');
+            $query = rtrim($query, ' AND');
 
-            $raw_query = rtrim($raw_query, ' AND ');
+            $raw_query = rtrim($raw_query, ' AND');
 
             $this->raw_query = $raw_query; // Save raw query
 
@@ -674,9 +651,9 @@ class Db
 
                 }
 
-                $query = rtrim($query, ' AND ');
+                $query = rtrim($query, ' AND');
 
-                $raw_query = rtrim($raw_query, ' AND ');
+                $raw_query = rtrim($raw_query, ' AND');
 
             }
 
@@ -736,9 +713,9 @@ class Db
 
                 }
 
-                $query = rtrim($query, ' AND ');
+                $query = rtrim($query, ' AND');
 
-                $raw_query = rtrim($raw_query, ' AND ');
+                $raw_query = rtrim($raw_query, ' AND');
 
             }
 
@@ -821,9 +798,9 @@ class Db
 
                 }
 
-                $query = rtrim($query, ' AND ');
+                $query = rtrim($query, ' AND');
 
-                $raw_query = rtrim($raw_query, ' AND ');
+                $raw_query = rtrim($raw_query, ' AND');
 
             }
 
@@ -903,7 +880,7 @@ class Db
      * @throws TransactionException
      */
 
-    public function rollbackTransaction()
+    public function rollbackTransaction(): bool
     {
 
         try {

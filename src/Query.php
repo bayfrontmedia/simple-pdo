@@ -1,12 +1,5 @@
 <?php
 
-/**
- * @package simple-pdo
- * @link https://github.com/bayfrontmedia/simple-pdo
- * @author John Robinson <john@bayfrontmedia.com>
- * @copyright 2021 Bayfront Media
- */
-
 namespace Bayfront\PDO;
 
 use Bayfront\ArrayHelpers\Arr;
@@ -17,7 +10,7 @@ use PDO;
 class Query
 {
 
-    protected $pdo; // Instance
+    protected PDO $pdo; // Instance
 
     /*
      * Possible $query keys include:
@@ -33,9 +26,9 @@ class Query
      *  - offset
      */
 
-    protected $query = [];
+    protected array $query = [];
 
-    protected $placeholders = [];
+    protected array $placeholders = [];
 
     public function __construct(PDO $pdo)
     {
@@ -83,7 +76,7 @@ class Query
      * @return self
      */
 
-    public function innerJoin(string $table, string $col1, string $col2)
+    public function innerJoin(string $table, string $col1, string $col2): self
     {
 
         $this->query['inner_join'] = ' INNER JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
@@ -102,7 +95,7 @@ class Query
      * @return self
      */
 
-    public function leftJoin(string $table, string $col1, string $col2)
+    public function leftJoin(string $table, string $col1, string $col2): self
     {
 
         $this->query['left_join'] = ' LEFT JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
@@ -121,7 +114,7 @@ class Query
      * @return self
      */
 
-    public function rightJoin(string $table, string $col1, string $col2)
+    public function rightJoin(string $table, string $col1, string $col2): self
     {
 
         $this->query['right_join'] = ' RIGHT JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
@@ -133,12 +126,12 @@ class Query
     /**
      * Define column(s) to select.
      *
-     * @param string|array $columns
+     * @param array|string $columns
      *
      * @return self
      */
 
-    public function select($columns): self
+    public function select(array|string $columns): self
     {
 
         foreach ((array)$columns as $column) {
@@ -183,7 +176,7 @@ class Query
      * @throws QueryException
      */
 
-    public function where(string $column, string $operator, $value): self
+    public function where(string $column, string $operator, mixed $value): self
     {
 
         if (!isset($this->query['where'])) {
@@ -474,7 +467,7 @@ class Query
      * @return mixed
      */
 
-    public function row()
+    public function row(): mixed
     {
         $stmt = $this->pdo->prepare($this->_getQuery());
 
@@ -489,7 +482,7 @@ class Query
      * @return mixed
      */
 
-    public function single()
+    public function single(): mixed
     {
         $stmt = $this->pdo->prepare($this->_getQuery());
 
