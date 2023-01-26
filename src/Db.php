@@ -249,7 +249,7 @@ class Db
 
     private mixed $query_start; // Microtime for query start
 
-    private mixed $stmt; // PDOStatement object
+    private mixed $stmt = NULL; // PDOStatement object
 
     private string $raw_query = ''; // Last raw query
 
