@@ -145,6 +145,82 @@ class Query
     }
 
     /**
+     * Is value a MySQL function?
+     *
+     * @param string $value
+     * @return bool
+     */
+    protected function is_function(string $value): bool
+    {
+
+        // See: https://dev.mysql.com/doc/refman/8.0/en/built-in-function-reference.html
+
+        $mysql_fxs = [
+            'ABS',
+            'ADDDATE',
+            'ADDTIME',
+            'AVG',
+            'BIN',
+            'BIN_TO_UUID',
+            'CAST',
+            'CEIL',
+            'CEILING',
+            'CONVERT',
+            'CONVERT_TZ',
+            'COUNT',
+            'CURDATE',
+            'CURRENT_DATE',
+            'CURRENT_TIME',
+            'CURRENT_TIMESTAMP',
+            'CURTIME',
+            'DATE',
+            'DATE_ADD',
+            'DATE_FORMAT',
+            'DATE_SUB',
+            'DATEDIFF',
+            'EXTRACT',
+            'FLOOR',
+            'FORMAT',
+            'GREATEST',
+            'HEX',
+            'IN',
+            'JSON_CONTAINS',
+            'JSON_CONTAINS_PATH',
+            'JSON_EXTRACT',
+            'JSON_INSERT',
+            'JSON_REMOVE',
+            'JSON_SEARCH',
+            'JSON_SET',
+            'MATCH',
+            'MAX',
+            'MD5',
+            'NOW',
+            'RAND',
+            'ROUND',
+            'SUM',
+            'TIME',
+            'TIME_FORMAT',
+            'TIME_TO_SEC',
+            'TIMEDIFF',
+            'TIMESTAMP',
+            'TIMESTAMPADD',
+            'TIMESTAMPDIFF',
+            'UUID',
+            'UUID_SHORT',
+            'UUID_TO_BIN'
+        ];
+
+        foreach ($mysql_fxs as $fn) {
+            if (str_starts_with($value . '(', $fn)) {
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
+    /**
      * Adds a WHERE clause to the query.
      *
      * Available operators are:
@@ -227,11 +303,21 @@ class Query
 
             case 'sw':
 
+                if ($this->is_function($value)) {
+                    $this->query['where'] .= $column . ' LIKE ' . $value;
+                    break;
+                }
+
                 $this->placeholders[] = $value . '%';
                 $this->query['where'] .= $column . ' LIKE ?';
                 break;
 
             case '!sw':
+
+                if ($this->is_function($value)) {
+                    $this->query['where'] .= $column . ' NOT LIKE ' . $value;
+                    break;
+                }
 
                 $this->placeholders[] = $value . '%';
                 $this->query['where'] .= $column . ' NOT LIKE ?';
@@ -239,11 +325,21 @@ class Query
 
             case 'ew':
 
+                if ($this->is_function($value)) {
+                    $this->query['where'] .= $column . ' LIKE ' . $value;
+                    break;
+                }
+
                 $this->placeholders[] = '%' . $value;
                 $this->query['where'] .= $column . ' LIKE ?';
                 break;
 
             case '!ew':
+
+                if ($this->is_function($value)) {
+                    $this->query['where'] .= $column . ' NOT LIKE ' . $value;
+                    break;
+                }
 
                 $this->placeholders[] = '%' . $value;
                 $this->query['where'] .= $column . ' NOT LIKE ?';
@@ -251,17 +347,32 @@ class Query
 
             case 'has':
 
+                if ($this->is_function($value)) {
+                    $this->query['where'] .= $column . ' LIKE ' . $value;
+                    break;
+                }
+
                 $this->placeholders[] = '%' . $value . '%';
                 $this->query['where'] .= $column . ' LIKE ?';
                 break;
 
             case '!has':
 
+                if ($this->is_function($value)) {
+                    $this->query['where'] .= $column . ' NOT LIKE ' . $value;
+                    break;
+                }
+
                 $this->placeholders[] = '%' . $value . '%';
                 $this->query['where'] .= $column . ' NOT LIKE ?';
                 break;
 
             case 'in':
+
+                if ($this->is_function($value)) {
+                    $this->query['where'] .= $column . ' IN (' . $value . ')';
+                    break;
+                }
 
                 $in_values = explode(',', $value);
 
@@ -278,6 +389,11 @@ class Query
                 break;
 
             case '!in':
+
+                if ($this->is_function($value)) {
+                    $this->query['where'] .= $column . ' NOT IN (' . $value . ')';
+                    break;
+                }
 
                 $in_values = explode(',', $value);
 
@@ -316,6 +432,10 @@ class Query
                 if ($value == '') { // Empty string needs no placeholder
 
                     $this->query['where'] .= $column . " " . $operator . " ''";
+
+                } else if ($this->is_function($value)) {
+
+                    $this->query['where'] .= $column . ' ' . $operator . ' ' . $value;
 
                 } else {
 

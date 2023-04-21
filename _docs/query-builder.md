@@ -182,6 +182,9 @@ The `in` and `!in` operators accept multiple comma-separated values.
 
 The `null` operator accepts two values: `true` and `false` for `is null` or `is not null`.
 
+> **NOTE:** Some native MySQL functions can be used as the `$value`, however they will be
+> injected into the query as strings, so they are vulnerable to SQL injection. 
+
 **Parameters:**
 
 - `$column` (string)
