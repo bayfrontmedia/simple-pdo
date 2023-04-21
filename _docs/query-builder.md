@@ -327,6 +327,8 @@ Returns last raw query.
 
 - (string)
 
+<hr />
+
 ### getLastParameters
 
 **Description:**
