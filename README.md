@@ -203,6 +203,7 @@ For more information, see [query builder](_docs/query-builder.md).
 **Query information**
 
 - [getLastQuery](#getlastquery)
+- [getLastParameters](#getlastparameters)
 - [rowCount](#rowcount)
 - [lastInsertId](#lastinsertid)
 - [getQueryTime](#getquerytime)
@@ -863,6 +864,28 @@ Returns last raw query.
 
 ```
 echo $db->getLastQuery();
+```
+
+<hr />
+
+### getLastParameters
+
+**Description:**
+
+Returns last query parameters.
+
+**Parameters:**
+
+- None
+
+**Returns:**
+
+- (array)
+
+**Example:**
+
+```
+print_r($db->getLastParameters();
 ```
 
 <hr />
