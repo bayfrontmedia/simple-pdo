@@ -46,6 +46,7 @@ $query = new Query($pdo);
 - [get](#get)
 - [row](#row)
 - [single](#single)
+- [getLastParameters](#getlastparameters)
 - [getTotalRows](#gettotalrows)
 
 <hr />
@@ -308,6 +309,28 @@ Get a single column of a single row of a table, or `false` if not existing.
 **Returns:**
 
 - (mixed)
+
+<hr />
+
+### getLastParameters
+
+**Description:**
+
+Returns last query parameters.
+
+**Parameters:**
+
+- None
+
+**Returns:**
+
+- (array)
+
+**Example:**
+
+```
+print_r($db->getLastParameters();
+```
 
 <hr />
 

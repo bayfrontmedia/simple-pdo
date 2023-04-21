@@ -253,6 +253,8 @@ class Db
 
     private string $raw_query = ''; // Last raw query
 
+    private array $parameters = [];
+
     private array $query_durations = []; // Records duration to execute each query
 
     /**
@@ -298,6 +300,8 @@ class Db
 
     private function _bindParams(array $params): void
     {
+
+        $this->parameters = $params;
 
         if (!empty($params)) {
 
@@ -587,7 +591,7 @@ class Db
 
             $placeholders = array_values($values);
 
-            foreach (array_values($conditions) as $condition) {
+            foreach ($conditions as $condition) {
                 $placeholders[] = $condition;
             }
 
@@ -910,6 +914,16 @@ class Db
     public function getLastQuery(): string
     {
         return $this->raw_query;
+    }
+
+    /**
+     * Returns last query parameters.
+     *
+     * @return array
+     */
+    public function getLastParameters(): array
+    {
+        return $this->parameters;
     }
 
     /**

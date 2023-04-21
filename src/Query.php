@@ -492,6 +492,28 @@ class Query
     }
 
     /**
+     * Returns last raw query.
+     *
+     * @return string
+     */
+
+    public function getLastQuery(): string
+    {
+        return $this->_getQuery();
+    }
+
+    /**
+     * Returns last query parameters.
+     *
+     * @return array
+     */
+
+    public function getLastParameters(): array
+    {
+        return $this->placeholders;
+    }
+
+    /**
      * Returns total number of rows found for the query without limit restrictions.
      *
      * NOTE: To get the number of rows affected by a DELETE, use the Bayfront\PDO\Db->rowCount() method.
