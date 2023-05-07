@@ -144,6 +144,9 @@ Add `RIGHT JOIN` clause to the query.
 
 Define column(s) to select.
 
+If the column type is `json`, keys from within the `JSON` string can be selected using dot notation.
+The field will be returned with the format of `{column}_{key}`.
+
 **Parameters:**
 
 - `$columns` (string|array)
@@ -159,6 +162,9 @@ Define column(s) to select.
 **Description:**
 
 Adds a `WHERE` clause to the query.
+
+If the column type is `json`, keys from within the `JSON` string can be searched using dot notation.
+The field can be searched with the format of `{column}_{key}`.
 
 Available operators are:
 
@@ -372,6 +378,8 @@ $results = $query->table('items')
     ->get();
 ```
 
+<hr />
+
 Select all records from `items` table where `price` is greater than `20.00`:
 
 ```
@@ -380,6 +388,27 @@ $results = $query->table('items')
     ->where('price', 'gt', '20.00')
     ->get();
 ```
+
+<hr />
+
+Select `name`, `color`, `quantity` and `supplier.location` records from `items` table where `price` is greater than `20.00` and `supplier.name` starts with `a`:
+
+```
+$results = $query->table('items')
+    ->select([
+        'name',
+        'color',
+        'quantity',
+        'supplier.location'
+    ])
+    ->where('price', 'gt', '20.00')
+    ->where('supplier.name', 'sw', 'a')
+    ->get();
+```
+
+This example represents a column named `supplier` with type of `json`.
+
+<hr />
 
 Select up to 10 results for `name`, `color`, `quantity` from `items` table where `description` contains the word "fluffy", and the price is less than `50.00`, ordered by `name` descending.
 Also, get the total number of rows found for the query without limit restrictions.
@@ -401,6 +430,8 @@ $results = $query->table('items')
 
 $total_count = $query->getTotalRows();
 ```
+
+<hr />
 
 Example using `LEFT JOIN`:
 
