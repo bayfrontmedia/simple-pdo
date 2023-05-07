@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.3.0] - 2023.05.06
 
-###
+### Added
 
 - Added ability to select and search `json` data type columns using the query builder.
 
