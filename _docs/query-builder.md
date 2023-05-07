@@ -145,7 +145,8 @@ Add `RIGHT JOIN` clause to the query.
 Define column(s) to select.
 
 If the column type is `json`, keys from within the `JSON` string can be selected using dot notation.
-The field will be returned with the format of `{column}_{key}`.
+The field can be selected with the format of `{column}.{key}`.
+The field will be returned with the format of `{column}_{key}` (Dots are replaced with underscores).
 
 **Parameters:**
 
@@ -164,7 +165,7 @@ The field will be returned with the format of `{column}_{key}`.
 Adds a `WHERE` clause to the query.
 
 If the column type is `json`, keys from within the `JSON` string can be searched using dot notation.
-The field can be searched with the format of `{column}_{key}`.
+The field can be searched with the format of `{column}.{key}`.
 
 Available operators are:
 
@@ -215,6 +216,9 @@ Adds an `ORDER BY` clause.
 
 Values in the `$columns` array without a prefix or prefixed with a `+` will be ordered ascending.
 Values in the `$columns` array prefixed with a `-` will be ordered descending.
+
+If the column type is `json`, keys from within the `JSON` string can be ordered using dot notation.
+The field can be ordered with the format of `{column}.{key}`.
 
 **Parameters:**
 

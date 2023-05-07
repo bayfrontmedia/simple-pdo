@@ -127,7 +127,8 @@ class Query
      * Define column(s) to select.
      *
      * If the column type is `json`, keys from within the `JSON` string can be selected using dot notation.
-     * The field will be returned with the format of `{column}_{key}`.
+     * The field can be selected with the format of `{column}.{key}`.
+     * The field will be returned with the format of `{column}_{key}` (Dots are replaced with underscores).
      *
      * @param array|string $columns
      *
@@ -235,7 +236,7 @@ class Query
      * Adds a WHERE clause to the query.
      *
      * If the column type is `json`, keys from within the `JSON` string can be searched using dot notation.
-     * The field can be searched with the format of `{column}_{key}`.
+     * The field can be searched with the format of `{column}.{key}`.
      *
      * Available operators are:
      *
@@ -478,6 +479,9 @@ class Query
      * Values in the $columns array without a prefix or prefixed with a "+" will be ordered ascending.
      * Values in the $columns array prefixed with a "-" will be ordered descending.
      *
+     * If the column type is `json`, keys from within the `JSON` string can be ordered using dot notation.
+     * The field can be ordered with the format of `{column}.{key}`.
+     *
      * @param array $columns
      *
      * @return self
@@ -496,7 +500,16 @@ class Query
 
             if (Str::startsWith($column, '-')) {
 
-                $string .= ltrim($column, '-') . ' DESC, ';
+                $column = ltrim($column, '-');
+
+                if (str_contains($column, '.')) { // JSON
+
+                    $json = explode('.', $column, 2);
+                    $column = $json[0] . "->'$." . $json[1] . "'";
+
+                }
+
+                $string .= $column . ' DESC, ';
 
             } else {
 
@@ -505,7 +518,16 @@ class Query
                  * was not encoded. Therefore, spaces must be trimmed from this string.
                  */
 
-                $string .= ltrim(ltrim($column, '+'), ' ') . ' ASC, ';
+                $column = ltrim(ltrim($column, '+'), ' ');
+
+                if (str_contains($column, '.')) { // JSON
+
+                    $json = explode('.', $column, 2);
+                    $column = $json[0] . "->'$." . $json[1] . "'";
+
+                }
+
+                $string .= $column . ' ASC, ';
 
             }
 
