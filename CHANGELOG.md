@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities
 
+## [2.3.0] - 2023.05.06
+
+###
+
+- Added ability to select and search `json` data type columns using the query builder.
+
 ## [2.2.0] - 2023.04.21
 
 ### Added

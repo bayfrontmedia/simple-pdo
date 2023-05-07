@@ -126,6 +126,9 @@ class Query
     /**
      * Define column(s) to select.
      *
+     * If the column type is `json`, keys from within the `JSON` string can be selected using dot notation.
+     * The field will be returned with the format of `{column}_{key}`.
+     *
      * @param array|string $columns
      *
      * @return self
@@ -135,6 +138,14 @@ class Query
     {
 
         foreach ((array)$columns as $column) {
+
+            if (str_contains($column, '.')) { // JSON
+
+                $json = explode('.', $column, 2);
+
+                $column = $json[0] . "->'$." . $json[1] . "' as " . $json[0] . '_' . str_replace('.', '_', $json[1]);
+
+            }
 
             $this->query['columns'][] = $column;
 
@@ -223,6 +234,9 @@ class Query
     /**
      * Adds a WHERE clause to the query.
      *
+     * If the column type is `json`, keys from within the `JSON` string can be searched using dot notation.
+     * The field can be searched with the format of `{column}_{key}`.
+     *
      * Available operators are:
      *
      * - eq (equals)
@@ -296,6 +310,14 @@ class Query
             '<=',
             '>='
         ], $operator);
+
+        if (str_contains($column, '.')) { // JSON
+
+            $json = explode('.', $column, 2);
+
+            $column = $json[0] . "->'$." . $json[1] . "'";
+
+        }
 
         // Check operators
 
