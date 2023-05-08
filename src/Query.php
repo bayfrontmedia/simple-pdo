@@ -144,7 +144,7 @@ class Query
 
                 $json = explode('.', $column, 2);
 
-                $column = $json[0] . "->'$." . $json[1] . "' as " . $json[0] . '_' . str_replace('.', '_', $json[1]);
+                $column = $json[0] . "->>'$." . $json[1] . "' as " . $json[0] . '_' . str_replace('.', '_', $json[1]);
 
             }
 
