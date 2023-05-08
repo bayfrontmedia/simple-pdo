@@ -316,7 +316,7 @@ class Query
 
             $json = explode('.', $column, 2);
 
-            $column = $json[0] . "->'$." . $json[1] . "'";
+            $column = $json[0] . "->>'$." . $json[1] . "'";
 
         }
 
@@ -505,7 +505,7 @@ class Query
                 if (str_contains($column, '.')) { // JSON
 
                     $json = explode('.', $column, 2);
-                    $column = $json[0] . "->'$." . $json[1] . "'";
+                    $column = $json[0] . "->>'$." . $json[1] . "'";
 
                 }
 
@@ -523,7 +523,7 @@ class Query
                 if (str_contains($column, '.')) { // JSON
 
                     $json = explode('.', $column, 2);
-                    $column = $json[0] . "->'$." . $json[1] . "'";
+                    $column = $json[0] . "->>'$." . $json[1] . "'";
 
                 }
 
