@@ -287,7 +287,7 @@ Returns the raw PDO instance of a given database.
 
 **Parameters:**
 
-- `$db_name = NULL` (string): Not specifying this parameter will return the PDO instance of the current database
+- `$db_name = ''` (string): Leaving this parameter blank will return the PDO instance of the current database
 
 **Returns:**
 
@@ -416,26 +416,16 @@ Execute a query.
 
 - (bool)
 
-**Throws:**
-
-- `Bayfront\PDO\Exceptions\QueryException`
-
 **Example:**
 
 ```
-try {
-
-    $db->query("INSERT INTO items (name, description, color, quantity, price) VALUES (:name, :description, :color, :quantity, :price)", [
+$db->query("INSERT INTO items (name, description, color, quantity, price) VALUES (:name, :description, :color, :quantity, :price)", [
         'name' => 'Sample item',
         'description' => 'Sample item description',
         'color' => 'blue',
         'quantity' => 5,
         'price' => 49.99
     ]);
-
-} catch (QueryException $e) {
-    echo $e->getMessage();
-}
 ```
 
 <hr />
@@ -456,22 +446,12 @@ Returns the result set from a table, or `false` on failure.
 
 - (mixed)
 
-**Throws:**
-
-- `Bayfront\PDO\Exceptions\QueryException`
-
 **Example:**
 
 ```
-try {
-
-    $results = $db->select("SELECT * FROM items WHERE price > :min_price", [
-        'min_price' => 20
-    ]);
-
-} catch (QueryException $e) {
-    echo $e->getMessage();
-}
+$results = $db->select("SELECT * FROM items WHERE price > :min_price", [
+    'min_price' => 20
+]);
 ```
 
 <hr />
@@ -491,23 +471,13 @@ Returns a single row from a table, or `false` on failure.
 **Returns:**
 
 - (mixed)
-
-**Throws:**
-
-- `Bayfront\PDO\Exceptions\QueryException`
-
+- 
 **Example:**
 
 ```
-try {
-
-    $result = $db->row("SELECT * FROM items WHERE id = :id", [
-        'id' => 1
-    ]);
-
-} catch (QueryException $e) {
-    echo $e->getMessage();
-}
+$result = $db->row("SELECT * FROM items WHERE id = :id", [
+    'id' => 1
+]);
 ```
 
 <hr />
@@ -527,22 +497,12 @@ Returns a single column from a single row of a table, or `false` if not existing
 
 - (mixed)
 
-**Throws:**
-
-- `Bayfront\PDO\Exceptions\QueryException`
-
 **Example:**
 
 ```
-try {
-
-    $result = $db->single("SELECT description FROM items WHERE id = :id", [
-        'id' => 1
-    ]);
-
-} catch (QueryException $e) {
-    echo $e->getMessage();
-}
+$result = $db->single("SELECT description FROM items WHERE id = :id", [
+    'id' => 1
+]);
 ```
 
 <hr />
@@ -563,26 +523,16 @@ Inserts a new row.
 
 - (bool)
 
-**Throws:**
-
-- `Bayfront\PDO\Exceptions\QueryException`
-
 **Example:**
 
 ```
-try {
-
-    $db->insert('items', [
-        'name' => 'Some new item',
-        'description' => 'A description of the item',
-        'color' => 'red',
-        'quantity' => 3,
-        'price' => 99.99
-    ]);
-
-} catch (QueryException $e) {
-    echo $e->getMessage();
-}
+$db->insert('items', [
+    'name' => 'Some new item',
+    'description' => 'A description of the item',
+    'color' => 'red',
+    'quantity' => 3,
+    'price' => 99.99
+]);
 ```
 
 <hr />
@@ -603,24 +553,14 @@ Updates an existing row.
 
 - (bool)
 
-**Throws:**
-
-- `Bayfront\PDO\Exceptions\QueryException`
-
 **Example:**
 
 ```
-try {
-
-    $db->update('items', [
-        'price' => 89.99
-    ], [
-        'id' => 2
-    ]);
-
-} catch (QueryException $e) {
-    echo $e->getMessage();
-}
+$db->update('items', [
+    'price' => 89.99
+], [
+    'id' => 2
+]);
 ```
 
 <hr />
@@ -642,22 +582,12 @@ Deletes row(s).
 
 - (bool)
 
-**Throws:**
-
-- `Bayfront\PDO\Exceptions\QueryException`
-
 **Example:**
 
 ```
-try {
-
-    $db->delete('items', [
-        'id' => 2
-    ]);
-
-} catch (QueryException $e) {
-    echo $e->getMessage();
-}
+$db->delete('items', [
+    'id' => 2
+]);
 ```
 
 <hr />
@@ -677,22 +607,12 @@ Returns number of rows in a table that matches given conditions.
 
 - (int)
 
-**Throws:**
-
-- `Bayfront\PDO\Exceptions\QueryException`
-
 **Example:**
 
 ```
-try {
-
-    $count = $db->count('items', [
-        'color' => 'blue'
-    ]);
-
-} catch (QueryException $e) {
-    echo $e->getMessage();
-}
+$count = $db->count('items', [
+    'color' => 'blue'
+]);
 ```
 
 <hr />
@@ -712,22 +632,12 @@ Checks if rows exist in a table that matches given conditions.
 
 - (bool)
 
-**Throws:**
-
-- `Bayfront\PDO\Exceptions\QueryException`
-
 **Example:**
 
 ```
-try {
-
-    $exists = $db->exists('items', [
-        'color' => 'blue'
-    ]);
-
-} catch (QueryException $e) {
-    echo $e->getMessage();
-}
+$exists = $db->exists('items', [
+    'color' => 'blue'
+]);
 ```
 
 <hr />
@@ -748,22 +658,12 @@ Returns sum of column in a table that matches given conditions.
 
 - (int)
 
-**Throws:**
-
-- `Bayfront\PDO\Exceptions\QueryException`
-
 **Example:**
 
 ```
-try {
-
-    $sum = $db->sum('items', 'quantity', [
-        'color' => 'blue'
-    ]);
-
-} catch (QueryException $e) {
-    echo $e->getMessage();
-}
+$sum = $db->sum('items', 'quantity', [
+    'color' => 'blue'
+]);
 ```
 
 <hr />
@@ -784,24 +684,14 @@ Once a transaction has begun, all database modifications across multiple queries
 
 - (bool)
 
-**Throws:**
-
-- `Bayfront\PDO\Exceptions\TransactionException`
-
 **Example:**
 
 ```
-try {
+$db->beginTransaction();
     
-    $db->beginTransaction();
+// Multiple queries occur here
     
-    // Multiple queries occur here
-    
-    $db->commitTransaction();
-    
-} catch (TransactionException $e) {
-    echo $e->getMessage();
-}
+$db->commitTransaction();
 ```
 
 <hr />
@@ -820,10 +710,6 @@ Commits a transaction.
 
 - (bool)
 
-**Throws:**
-
-- `Bayfront\PDO\Exceptions\TransactionException`
-
 <hr />
 
 ### rollbackTransaction
@@ -839,10 +725,6 @@ Cancels a transaction which has begun, and rolls back any modifications since th
 **Returns:**
 
 - (bool)
-
-**Throws:**
-
-- `Bayfront\PDO\Exceptions\TransactionException`
 
 <hr />
 

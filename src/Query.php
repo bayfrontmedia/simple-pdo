@@ -40,9 +40,7 @@ class Query
 
     /**
      * Define the table to query.
-     *
      * @param string $table
-     *
      * @return self
      */
 
@@ -72,7 +70,6 @@ class Query
      * @param string $table
      * @param string $col1
      * @param string $col2
-     *
      * @return self
      */
 
@@ -91,7 +88,6 @@ class Query
      * @param string $table
      * @param string $col1
      * @param string $col2
-     *
      * @return self
      */
 
@@ -110,7 +106,6 @@ class Query
      * @param string $table
      * @param string $col1
      * @param string $col2
-     *
      * @return self
      */
 
@@ -131,7 +126,6 @@ class Query
      * The field will be returned with the format of `{column}_{key}` (Dots are replaced with underscores).
      *
      * @param array|string $columns
-     *
      * @return self
      */
 
@@ -261,9 +255,7 @@ class Query
      * @param string $column
      * @param string $operator
      * @param mixed $value
-     *
      * @return self
-     *
      * @throws QueryException
      */
 
@@ -483,7 +475,6 @@ class Query
      * The field can be ordered with the format of `{column}.{key}`.
      *
      * @param array $columns
-     *
      * @return self
      */
 
@@ -558,7 +549,6 @@ class Query
      * Adds a LIMIT clause.
      *
      * @param int $limit
-     *
      * @return self
      */
 
@@ -575,7 +565,6 @@ class Query
      * Adds an OFFSET clause.
      *
      * @param int $offset
-     *
      * @return self
      */
 
@@ -594,7 +583,7 @@ class Query
      * @return string
      */
 
-    protected function _getQuery(): string
+    protected function getQuery(): string
     {
 
         return 'SELECT ' . Arr::get($this->query, 'distinct', '')
@@ -618,7 +607,7 @@ class Query
 
     public function get(): array
     {
-        $stmt = $this->pdo->prepare($this->_getQuery());
+        $stmt = $this->pdo->prepare($this->getQuery());
 
         $stmt->execute($this->placeholders);
 
@@ -633,7 +622,7 @@ class Query
 
     public function row(): mixed
     {
-        $stmt = $this->pdo->prepare($this->_getQuery());
+        $stmt = $this->pdo->prepare($this->getQuery());
 
         $stmt->execute($this->placeholders);
 
@@ -648,7 +637,7 @@ class Query
 
     public function single(): mixed
     {
-        $stmt = $this->pdo->prepare($this->_getQuery());
+        $stmt = $this->pdo->prepare($this->getQuery());
 
         $stmt->execute($this->placeholders);
 
@@ -663,7 +652,7 @@ class Query
 
     public function getLastQuery(): string
     {
-        return $this->_getQuery();
+        return $this->getQuery();
     }
 
     /**

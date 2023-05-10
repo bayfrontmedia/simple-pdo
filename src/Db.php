@@ -3,11 +3,7 @@
 namespace Bayfront\PDO;
 
 use Bayfront\PDO\Exceptions\InvalidDatabaseException;
-use Bayfront\PDO\Exceptions\QueryException;
-use Bayfront\PDO\Exceptions\TransactionException;
-use Exception;
 use PDO;
-use PDOException;
 use PDOStatement;
 
 class Db
@@ -41,7 +37,7 @@ class Db
 
     public function __destruct()
     {
-        $this->_disconnectAll();
+        $this->disconnectAll();
     }
 
     /**
@@ -50,7 +46,7 @@ class Db
      * @return void
      */
 
-    private function _disconnectAll(): void
+    private function disconnectAll(): void
     {
 
         foreach (self::$db_connections as $k => $connection) {
@@ -67,18 +63,10 @@ class Db
      * Returns PDO object for current database name and resets current connection to default.
      *
      * @return PDO
-     *
-     * @throws InvalidDatabaseException
      */
 
-    private function _getConnection(): PDO
+    private function getConnection(): PDO
     {
-
-        if (!isset(self::$db_connections[$this->current_db_name])) {
-
-            throw new InvalidDatabaseException('Database connection has not been setup');
-
-        }
 
         $current = self::$db_connections[$this->current_db_name];
 
@@ -101,9 +89,7 @@ class Db
      * @param string $db_name (Name must be unique)
      * @param bool $make_current
      * @param bool $make_default
-     *
      * @return self
-     *
      * @throws InvalidDatabaseException
      */
 
@@ -141,9 +127,7 @@ class Db
      *
      * @param string $db_name
      * @param bool $make_default
-     *
      * @return self
-     *
      * @throws InvalidDatabaseException
      */
 
@@ -171,17 +155,15 @@ class Db
     /**
      * Returns the raw PDO instance of a given database.
      *
-     * @param string|null $db_name (Not specifying this parameter will return the PDO instance of the current database)
-     *
+     * @param string $db_name (Leaving this parameter blank will return the PDO instance of the current database)
      * @return PDO
-     *
      * @throws InvalidDatabaseException
      */
 
-    public function get(string $db_name = NULL): PDO
+    public function get(string $db_name = ''): PDO
     {
 
-        if (NULL === $db_name) {
+        if ($db_name == '') {
             $db_name = $this->current_db_name;
         }
 
@@ -232,7 +214,6 @@ class Db
      * Checks if connected to a given database name.
      *
      * @param string $db_name
-     *
      * @return bool
      */
 
@@ -263,7 +244,7 @@ class Db
      * @return void
      */
 
-    private function _beginQuery(): void
+    private function beginQuery(): void
     {
 
         $this->query_start = microtime(true);
@@ -278,15 +259,12 @@ class Db
      * Prepares a statement for execution and returns a statement object.
      *
      * @param string $query
-     *
      * @return PDOStatement
-     *
-     * @throws InvalidDatabaseException
      */
 
-    private function _prepare(string $query): PDOStatement
+    private function prepare(string $query): PDOStatement
     {
-        return $this->_getConnection()->prepare($query); // PDOStatement object
+        return $this->getConnection()->prepare($query); // PDOStatement object
     }
 
     /**
@@ -298,7 +276,7 @@ class Db
      * @return void
      */
 
-    private function _bindParams(array $params): void
+    private function bindParams(array $params): void
     {
 
         $this->parameters = $params;
@@ -339,37 +317,25 @@ class Db
      *
      * @param string $query
      * @param array $params
-     *
      * @return bool
-     *
-     * @throws QueryException
-     *
      */
 
     public function query(string $query, array $params = []): bool
     {
 
-        try {
+        $this->beginQuery();
 
-            $this->_beginQuery();
+        $this->stmt = $this->prepare($query);
 
-            $this->stmt = $this->_prepare($query);
+        $this->raw_query = $query;
 
-            $this->raw_query = $query;
+        $this->bindParams($params);
 
-            $this->_bindParams($params);
+        $return = $this->stmt->execute();
 
-            $return = $this->stmt->execute();
+        $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
 
-            $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
-
-            return $return;
-
-        } catch (Exception $e) {
-
-            throw new QueryException('Unable to execute query method', 0, $e);
-
-        }
+        return $return;
 
     }
 
@@ -379,32 +345,19 @@ class Db
      * @param string $query
      * @param array $params
      * @param bool $return_array (When false, the result set will be returned as an object)
-     *
      * @return mixed
-     *
-     * @throws QueryException
      */
 
     public function select(string $query, array $params = [], bool $return_array = true): mixed
     {
 
-        try {
+        $this->query($query, $params);
 
-            $this->query($query, $params);
-
-            if ($return_array) {
-
-                return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            }
-
-            return $this->stmt->fetchAll(PDO::FETCH_OBJ);
-
-        } catch (Exception $e) {
-
-            throw new QueryException('Unable to execute select method', 0, $e);
-
+        if ($return_array) {
+            return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
         }
+
+        return $this->stmt->fetchAll(PDO::FETCH_OBJ);
 
     }
 
@@ -414,32 +367,19 @@ class Db
      * @param string $query
      * @param array $params
      * @param bool $return_array (When false, the result set will be returned as an object)
-     *
      * @return mixed
-     *
-     * @throws QueryException
      */
 
     public function row(string $query, array $params = [], bool $return_array = true): mixed
     {
 
-        try {
+        $this->query($query, $params);
 
-            $this->query($query, $params);
-
-            if ($return_array) {
-
-                return $this->stmt->fetch(PDO::FETCH_ASSOC);
-
-            }
-
-            return $this->stmt->fetch(PDO::FETCH_OBJ);
-
-        } catch (Exception $e) {
-
-            throw new QueryException('Unable to execute row method', 0, $e);
-
+        if ($return_array) {
+            return $this->stmt->fetch(PDO::FETCH_ASSOC);
         }
+
+        return $this->stmt->fetch(PDO::FETCH_OBJ);
 
     }
 
@@ -448,27 +388,13 @@ class Db
      *
      * @param string $query
      * @param array $params
-     *
      * @return mixed
-     *
-     * @throws QueryException
      */
 
     public function single(string $query, array $params = []): mixed
     {
-
-        try {
-
-            $this->query($query, $params);
-
-            return $this->stmt->fetchColumn();
-
-        } catch (Exception $e) {
-
-            throw new QueryException('Unable to execute single method', 0, $e);
-
-        }
-
+        $this->query($query, $params);
+        return $this->stmt->fetchColumn();
     }
 
     /**
@@ -477,66 +403,55 @@ class Db
      * @param string $table
      * @param array $values
      * @param bool $overwrite (Overwrite preexisting values if they exist)
-     *
      * @return bool
-     *
-     * @throws QueryException
      */
 
     public function insert(string $table, array $values, bool $overwrite = true): bool
     {
 
-        try {
+        $this->beginQuery();
 
-            $this->_beginQuery();
+        $query = 'INSERT INTO ' . $table . ' (';
 
-            $query = 'INSERT INTO ' . $table . ' (';
+        $query .= implode(', ', array_keys($values));
 
-            $query .= implode(', ', array_keys($values));
+        $query .= ') VALUES (';
 
-            $query .= ') VALUES (';
+        $raw_query = $query . implode(', ', $values);
 
-            $raw_query = $query . implode(', ', $values);
+        $query .= implode(', ', array_fill(0, count($values), '?'));
 
-            $query .= implode(', ', array_fill(0, count($values), '?'));
+        $query .= ')';
 
-            $query .= ')';
+        $raw_query .= ')';
 
-            $raw_query .= ')';
+        if (true === $overwrite) {
 
-            if (true === $overwrite) {
+            $append = ' ON DUPLICATE KEY UPDATE ';
 
-                $append = ' ON DUPLICATE KEY UPDATE ';
+            foreach (array_keys($values) as $value) {
 
-                foreach (array_keys($values) as $value) {
-
-                    $append .= $value . ' = VALUES(' . $value . '), ';
-
-                }
-
-                $append = rtrim($append, ', ');
-
-                $query .= $append;
-
-                $raw_query .= $append;
+                $append .= $value . ' = VALUES(' . $value . '), ';
 
             }
 
-            $this->raw_query = $raw_query; // Save raw query
+            $append = rtrim($append, ', ');
 
-            $this->stmt = $this->_prepare($query);
+            $query .= $append;
 
-            $return = $this->stmt->execute(array_values($values));
-
-            $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
-
-            return $return;
-
-        } catch (Exception $e) {
-
-            throw new QueryException('Unable to execute insert method', 0, $e);
+            $raw_query .= $append;
 
         }
+
+        $this->raw_query = $raw_query; // Save raw query
+
+        $this->stmt = $this->prepare($query);
+
+        $return = $this->stmt->execute(array_values($values));
+
+        $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
+
+        return $return;
 
     }
 
@@ -546,34 +461,89 @@ class Db
      * @param string $table
      * @param array $values
      * @param array $conditions (Where key = value)
-     *
      * @return bool
-     *
-     * @throws QueryException
      */
 
     public function update(string $table, array $values, array $conditions): bool
     {
 
-        try {
+        $this->beginQuery();
 
-            $this->_beginQuery();
+        $query = 'UPDATE ' . $table . ' SET ';
 
-            $query = 'UPDATE ' . $table . ' SET ';
+        $raw_query = $query;
 
-            $raw_query = $query;
+        foreach ($values as $k => $v) {
 
-            foreach ($values as $k => $v) {
+            $query .= $k . '=?, ';
 
-                $query .= $k . '=?, ';
+            $raw_query .= $k . '=' . $v . ', ';
 
-                $raw_query .= $k . '=' . $v . ', ';
+        }
 
-            }
+        $query = rtrim($query, ', ') . ' WHERE ';
 
-            $query = rtrim($query, ', ') . ' WHERE ';
+        $raw_query = rtrim($raw_query, ', ') . ' WHERE ';
 
-            $raw_query = rtrim($raw_query, ', ') . ' WHERE ';
+        foreach ($conditions as $k => $v) {
+
+            $query .= $k . '=? AND ';
+
+            $raw_query .= $k . '=' . $v . ' AND ';
+
+        }
+
+        $query = rtrim($query, ' AND');
+
+        $raw_query = rtrim($raw_query, ' AND');
+
+        $this->raw_query = $raw_query; // Save raw query
+
+        $placeholders = array_values($values);
+
+        foreach ($conditions as $condition) {
+            $placeholders[] = $condition;
+        }
+
+        $this->stmt = $this->prepare($query);
+
+        $this->stmt->execute(array_values($placeholders));
+
+        $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
+
+        return $this->stmt->rowCount() > 0; // Return bool if rows were actually updated
+
+    }
+
+    /**
+     * Deletes row(s).
+     *
+     * NOTE: Leaving the $conditions array empty will delete all rows of the table, so use with caution!
+     *
+     * For this reason, the $conditions array must be passed to this method as an added precaution.
+     *
+     * @param string $table
+     * @param array $conditions (Where key = value)
+     * @return bool
+     * @noinspection DuplicatedCode
+     */
+
+    public function delete(string $table, array $conditions): bool
+    {
+
+        $this->beginQuery();
+
+        /** @noinspection SqlWithoutWhere */
+
+        $query = 'DELETE FROM ' . $table;
+
+        $raw_query = $query;
+
+        if (!empty($conditions)) {
+
+            $query .= ' WHERE ';
+
+            $raw_query .= ' WHERE ';
 
             foreach ($conditions as $k => $v) {
 
@@ -587,95 +557,17 @@ class Db
 
             $raw_query = rtrim($raw_query, ' AND');
 
-            $this->raw_query = $raw_query; // Save raw query
-
-            $placeholders = array_values($values);
-
-            foreach ($conditions as $condition) {
-                $placeholders[] = $condition;
-            }
-
-            $this->stmt = $this->_prepare($query);
-
-            $this->stmt->execute(array_values($placeholders));
-
-            $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
-
-            return $this->stmt->rowCount() > 0; // Return bool if rows were actually updated
-
-        } catch (Exception $e) {
-
-            throw new QueryException('Unable to execute update method', 0, $e);
-
         }
 
-    }
+        $this->raw_query = $raw_query; // Save raw query
 
-    /**
-     * Deletes row(s).
-     *
-     * NOTE: Leaving the $conditions array empty will delete all rows of the table, so use with caution!
-     *
-     * For this reason, the $conditions array must be passed to this method as an added precaution.
-     *
-     * @param string $table
-     * @param array $conditions (Where key = value)
-     *
-     * @return bool
-     *
-     * @throws QueryException
-     *
-     * @noinspection DuplicatedCode
-     */
+        $this->stmt = $this->prepare($query);
 
-    public function delete(string $table, array $conditions): bool
-    {
+        $this->stmt->execute(array_values($conditions));
 
-        try {
+        $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
 
-            $this->_beginQuery();
-
-            /** @noinspection SqlWithoutWhere */
-
-            $query = 'DELETE FROM ' . $table;
-
-            $raw_query = $query;
-
-            if (!empty($conditions)) {
-
-                $query .= ' WHERE ';
-
-                $raw_query .= ' WHERE ';
-
-                foreach ($conditions as $k => $v) {
-
-                    $query .= $k . '=? AND ';
-
-                    $raw_query .= $k . '=' . $v . ' AND ';
-
-                }
-
-                $query = rtrim($query, ' AND');
-
-                $raw_query = rtrim($raw_query, ' AND');
-
-            }
-
-            $this->raw_query = $raw_query; // Save raw query
-
-            $this->stmt = $this->_prepare($query);
-
-            $this->stmt->execute(array_values($conditions));
-
-            $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
-
-            return $this->stmt->rowCount() > 0; // Return bool if rows were actually deleted
-
-        } catch (Exception $e) {
-
-            throw new QueryException('Unable to execute delete method', 0, $e);
-
-        }
+        return $this->stmt->rowCount() > 0; // Return bool if rows were actually deleted
 
     }
 
@@ -684,10 +576,7 @@ class Db
      *
      * @param string $table
      * @param array $conditions (Where key = value)
-     *
      * @return int
-     *
-     * @throws QueryException
      *
      * @noinspection DuplicatedCode
      */
@@ -695,49 +584,41 @@ class Db
     public function count(string $table, array $conditions = []): int
     {
 
-        try {
+        $this->beginQuery();
 
-            $this->_beginQuery();
+        $query = 'SELECT COUNT(*) FROM ' . $table;
 
-            $query = 'SELECT COUNT(*) FROM ' . $table;
+        $raw_query = $query;
 
-            $raw_query = $query;
+        if (!empty($conditions)) {
 
-            if (!empty($conditions)) {
+            $query .= ' WHERE ';
 
-                $query .= ' WHERE ';
+            $raw_query .= ' WHERE ';
 
-                $raw_query .= ' WHERE ';
+            foreach ($conditions as $k => $v) {
 
-                foreach ($conditions as $k => $v) {
+                $query .= $k . '=? AND ';
 
-                    $query .= $k . '=? AND ';
-
-                    $raw_query .= $k . '=' . $v . ' AND ';
-
-                }
-
-                $query = rtrim($query, ' AND');
-
-                $raw_query = rtrim($raw_query, ' AND');
+                $raw_query .= $k . '=' . $v . ' AND ';
 
             }
 
-            $this->raw_query = $raw_query; // Save raw query
+            $query = rtrim($query, ' AND');
 
-            $this->stmt = $this->_prepare($query);
-
-            $this->stmt->execute(array_values($conditions));
-
-            $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
-
-            return (int)$this->stmt->fetchColumn();
-
-        } catch (Exception $e) {
-
-            throw new QueryException('Unable to execute count method', 0, $e);
+            $raw_query = rtrim($raw_query, ' AND');
 
         }
+
+        $this->raw_query = $raw_query; // Save raw query
+
+        $this->stmt = $this->prepare($query);
+
+        $this->stmt->execute(array_values($conditions));
+
+        $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
+
+        return (int)$this->stmt->fetchColumn();
 
     }
 
@@ -746,16 +627,14 @@ class Db
      *
      * @param string $table
      * @param array $conditions (Where key = value)
-     *
      * @return bool
      *
-     * @throws QueryException
      */
 
     public function exists(string $table, array $conditions = []): bool
     {
 
-        if ($this->count($table, $conditions) > 0) { // throws QueryException
+        if ($this->count($table, $conditions) > 0) {
             return true;
         }
 
@@ -769,60 +648,48 @@ class Db
      * @param string $table
      * @param string $column
      * @param array $conditions (Where key = value)
-     *
      * @return int
-     *
-     * @throws QueryException
-     *
      * @noinspection DuplicatedCode
      */
 
     public function sum(string $table, string $column, array $conditions = []): int
     {
 
-        try {
+        $this->beginQuery();
 
-            $this->_beginQuery();
+        $query = 'SELECT SUM(' . $column . ') FROM ' . $table;
 
-            $query = 'SELECT SUM(' . $column . ') FROM ' . $table;
+        $raw_query = $query;
 
-            $raw_query = $query;
+        if (!empty($conditions)) {
 
-            if (!empty($conditions)) {
+            $query .= ' WHERE ';
 
-                $query .= ' WHERE ';
+            $raw_query .= ' WHERE ';
 
-                $raw_query .= ' WHERE ';
+            foreach ($conditions as $k => $v) {
 
-                foreach ($conditions as $k => $v) {
+                $query .= $k . '=? AND ';
 
-                    $query .= $k . '=? AND ';
-
-                    $raw_query .= $k . '=' . $v . ' AND ';
-
-                }
-
-                $query = rtrim($query, ' AND');
-
-                $raw_query = rtrim($raw_query, ' AND');
+                $raw_query .= $k . '=' . $v . ' AND ';
 
             }
 
-            $this->raw_query = $raw_query; // Save raw query
+            $query = rtrim($query, ' AND');
 
-            $this->stmt = $this->_prepare($query);
-
-            $this->stmt->execute(array_values($conditions));
-
-            $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
-
-            return (int)$this->stmt->fetchColumn();
-
-        } catch (Exception $e) {
-
-            throw new QueryException('Unable to execute sum method', 0, $e);
+            $raw_query = rtrim($raw_query, ' AND');
 
         }
+
+        $this->raw_query = $raw_query; // Save raw query
+
+        $this->stmt = $this->prepare($query);
+
+        $this->stmt->execute(array_values($conditions));
+
+        $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
+
+        return (int)$this->stmt->fetchColumn();
 
     }
 
@@ -833,46 +700,22 @@ class Db
      * will be rolled back if any fail, or if cancelled by calling cancelTransaction().
      *
      * @return bool
-     *
-     * @throws TransactionException
      */
 
     public function beginTransaction(): bool
     {
-
-        try {
-
-            return self::$db_connections[$this->current_db_name]->beginTransaction();
-
-        } catch (PDOException $e) {
-
-            throw new TransactionException('Unable to begin transaction', 0, $e);
-
-        }
-
+        return self::$db_connections[$this->current_db_name]->beginTransaction();
     }
 
     /**
      * Commits a transaction.
      *
      * @return bool
-     *
-     * @throws TransactionException
      */
 
     public function commitTransaction(): bool
     {
-
-        try {
-
-            return self::$db_connections[$this->current_db_name]->commit();
-
-        } catch (PDOException $e) {
-
-            throw new TransactionException('Unable to commit transaction', 0, $e);
-
-        }
-
+        return self::$db_connections[$this->current_db_name]->commit();
     }
 
     /**
@@ -880,23 +723,11 @@ class Db
      * since the transaction began.
      *
      * @return bool
-     *
-     * @throws TransactionException
      */
 
     public function rollbackTransaction(): bool
     {
-
-        try {
-
-            return self::$db_connections[$this->current_db_name]->rollback();
-
-        } catch (PDOException $e) {
-
-            throw new TransactionException('Unable to rollback transaction', 0, $e);
-
-        }
-
+        return self::$db_connections[$this->current_db_name]->rollback();
     }
 
     /*
