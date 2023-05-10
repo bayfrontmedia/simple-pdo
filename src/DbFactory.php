@@ -36,11 +36,11 @@ class DbFactory
 
             }
 
+            /** @var AdapterInterface $adapter */
+
+            $adapter = 'Bayfront\PDO\Adapters\\' . $db_config['adapter'];
+
             if (isset($db_config['default']) && true === $db_config['default'] && !isset($db)) { // If default database
-
-                /** @var AdapterInterface $adapter */
-
-                $adapter = 'Bayfront\PDO\Adapters\\' . $db_config['adapter'];
 
                 // Create connection
 
@@ -56,10 +56,6 @@ class DbFactory
                 $db = new Db($pdo, $name);
 
             } else { // If not default database
-
-                /** @var AdapterInterface $adapter */
-
-                $adapter = 'Bayfront\PDO\Adapters\\' . $db_config['adapter'];
 
                 // Create connection
 

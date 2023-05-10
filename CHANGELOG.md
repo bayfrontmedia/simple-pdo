@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities
 
+## [3.0.0] - 2023.05.09
+
+### Removed
+
+- Removed needless exceptions rethrown on `PDOException`.
+
 ## [2.3.0] - 2023.05.08
 
 ### Added
