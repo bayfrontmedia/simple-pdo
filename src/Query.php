@@ -121,9 +121,10 @@ class Query
     /**
      * Define column(s) to select.
      *
-     * If the column type is `json`, keys from within the `JSON` string can be selected using dot notation.
-     * The field can be selected with the format of `{column}.{key}`.
-     * The field will be returned with the format of `{column}_{key}` (Dots are replaced with underscores).
+     * If the column type is json, keys from within the JSON string can be selected with the format of {column}->{key}.
+     * The field will be returned with the format of {column}_{key}.
+     *
+     * JSON fields which do not exist are treated as null.
      *
      * @param array|string $columns
      * @return self
@@ -134,11 +135,11 @@ class Query
 
         foreach ((array)$columns as $column) {
 
-            if (str_contains($column, '.')) { // JSON
+            if (str_contains($column, '->')) { // JSON
 
-                $json = explode('.', $column, 2);
+                $json = explode('->', $column, 2);
 
-                $column = $json[0] . "->>'$." . $json[1] . "' as " . $json[0] . '_' . str_replace('.', '_', $json[1]);
+                $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "' as " . $json[0] . '_' . str_replace('->', '_', $json[1]);
 
             }
 
@@ -229,8 +230,8 @@ class Query
     /**
      * Adds a WHERE clause to the query.
      *
-     * If the column type is `json`, keys from within the `JSON` string can be searched using dot notation.
-     * The field can be searched with the format of `{column}.{key}`.
+     * If the column type is json, keys from within the JSON string can be searched with the format of {column}->{key}.
+     * JSON fields which do not exist are treated as null.
      *
      * Available operators are:
      *
@@ -304,11 +305,11 @@ class Query
             '>='
         ], $operator);
 
-        if (str_contains($column, '.')) { // JSON
+        if (str_contains($column, '->')) { // JSON
 
-            $json = explode('.', $column, 2);
+            $json = explode('->', $column, 2);
 
-            $column = $json[0] . "->>'$." . $json[1] . "'";
+            $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "'";
 
         }
 
@@ -471,8 +472,8 @@ class Query
      * Values in the $columns array without a prefix or prefixed with a "+" will be ordered ascending.
      * Values in the $columns array prefixed with a "-" will be ordered descending.
      *
-     * If the column type is `json`, keys from within the `JSON` string can be ordered using dot notation.
-     * The field can be ordered with the format of `{column}.{key}`.
+     * If the column type is json, keys from within the JSON string can be ordered with the format of {column}->{key}.
+     * JSON fields which do not exist are treated as null.
      *
      * @param array $columns
      * @return self
@@ -493,10 +494,10 @@ class Query
 
                 $column = ltrim($column, '-');
 
-                if (str_contains($column, '.')) { // JSON
+                if (str_contains($column, '->')) { // JSON
 
-                    $json = explode('.', $column, 2);
-                    $column = $json[0] . "->>'$." . $json[1] . "'";
+                    $json = explode('->', $column, 2);
+                    $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "'";
 
                 }
 
@@ -511,10 +512,10 @@ class Query
 
                 $column = ltrim(ltrim($column, '+'), ' ');
 
-                if (str_contains($column, '.')) { // JSON
+                if (str_contains($column, '->')) { // JSON
 
-                    $json = explode('.', $column, 2);
-                    $column = $json[0] . "->>'$." . $json[1] . "'";
+                    $json = explode('->', $column, 2);
+                    $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "'";
 
                 }
 

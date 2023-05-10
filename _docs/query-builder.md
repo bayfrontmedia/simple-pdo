@@ -144,9 +144,8 @@ Add `RIGHT JOIN` clause to the query.
 
 Define column(s) to select.
 
-If the column type is `json`, keys from within the JSON string can be selected using dot notation.
-The field can be selected with the format of `{column}.{key}`.
-The field will be returned with the format of `{column}_{key}` (Dots are replaced with underscores).
+If the column type is `json`, keys from within the JSON string can be selected with the format of `{column}->{key}`.
+The field will be returned with the format of `{column}_{key}`.
 JSON fields which do not exist are treated as `null`.
 
 **Parameters:**
@@ -165,8 +164,7 @@ JSON fields which do not exist are treated as `null`.
 
 Adds a `WHERE` clause to the query.
 
-If the column type is `json`, keys from within the JSON string can be searched using dot notation.
-The field can be searched with the format of `{column}.{key}`.
+If the column type is `json`, keys from within the JSON string can be searched with the format of `{column}->{key}`.
 JSON fields which do not exist are treated as `null`.
 
 Available operators are:
@@ -219,8 +217,7 @@ Adds an `ORDER BY` clause.
 Values in the `$columns` array without a prefix or prefixed with a `+` will be ordered ascending.
 Values in the `$columns` array prefixed with a `-` will be ordered descending.
 
-If the column type is `json`, keys from within the JSON string can be ordered using dot notation.
-The field can be ordered with the format of `{column}.{key}`.
+If the column type is `json`, keys from within the JSON string can be ordered with the format of `{column}->{key}`.
 JSON fields which do not exist are treated as `null`.
 
 **Parameters:**
@@ -398,7 +395,7 @@ $results = $query->table('items')
 
 <hr />
 
-Select `name`, `color`, `quantity` and `supplier.location` records from `items` table where `price` is greater than `20.00` and `supplier.name` starts with `a`:
+Select `name`, `color`, `quantity` and `supplier->location` records from `items` table where `price` is greater than `20.00` and `supplier->name` starts with `a`:
 
 ```
 $results = $query->table('items')
@@ -406,10 +403,10 @@ $results = $query->table('items')
         'name',
         'color',
         'quantity',
-        'supplier.location'
+        'supplier->location'
     ])
     ->where('price', 'gt', '20.00')
-    ->where('supplier.name', 'sw', 'a')
+    ->where('supplier->name', 'sw', 'a')
     ->get();
 ```
 
