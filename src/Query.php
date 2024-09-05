@@ -26,9 +26,9 @@ class Query
      *  - offset
      */
 
-    protected array $query = [];
+    private array $query = [];
 
-    protected array $placeholders = [];
+    private array $placeholders = [];
 
     public function __construct(PDO $pdo)
     {
@@ -37,6 +37,8 @@ class Query
 
         $this->pdo = $pdo;
     }
+
+    private string $table = '';
 
     /**
      * Define the table to query.
@@ -47,6 +49,8 @@ class Query
     public function table(string $table): self
     {
         $this->query['from'] = ' FROM ' . $table;
+
+        $this->table = $table;
 
         return $this;
     }
@@ -135,11 +139,21 @@ class Query
 
         foreach ((array)$columns as $column) {
 
+            if (!str_contains($column, '.') && $this->table !== '') { // Support for joins
+                $column = $this->table . '.' . $column;
+            }
+
             if (str_contains($column, '->')) { // JSON
 
-                $json = explode('->', $column, 2);
+                $column_parts = explode(' ', $column, 2); // Allow for spaces, such as with "... AS x"
 
-                $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "' as " . $json[0] . '_' . str_replace('->', '_', $json[1]);
+                $json = explode('->', $column_parts[0], 2);
+
+                $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "'";
+
+                if (isset($column_parts[1])) {
+                    $column = $column . " " . $column_parts[1];
+                }
 
             }
 
@@ -157,7 +171,7 @@ class Query
      * @param string $value
      * @return bool
      */
-    protected function is_function(string $value): bool
+    private function is_function(string $value): bool
     {
 
         // See: https://dev.mysql.com/doc/refman/8.0/en/built-in-function-reference.html
@@ -224,6 +238,30 @@ class Query
         }
 
         return false;
+
+    }
+
+    /**
+     * Parse column.
+     *
+     * @param string $column
+     * @return string
+     */
+    private function parseConditionColumn(string $column): string
+    {
+
+        if (!str_contains($column, '.') && $this->table !== '') { // Support for joins
+            $column = $this->table . '.' . $column;
+        }
+
+        if (str_contains($column, '->')) { // JSON
+
+            $json = explode('->', $column, 2);
+            $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "'";
+
+        }
+
+        return $column;
 
     }
 
@@ -305,13 +343,7 @@ class Query
             '>='
         ], $operator);
 
-        if (str_contains($column, '->')) { // JSON
-
-            $json = explode('->', $column, 2);
-
-            $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "'";
-
-        }
+        $column = $this->parseConditionColumn($column);
 
         // Check operators
 
@@ -494,12 +526,7 @@ class Query
 
                 $column = ltrim($column, '-');
 
-                if (str_contains($column, '->')) { // JSON
-
-                    $json = explode('->', $column, 2);
-                    $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "'";
-
-                }
+                $column = $this->parseConditionColumn($column);
 
                 $string .= $column . ' DESC, ';
 
@@ -512,12 +539,7 @@ class Query
 
                 $column = ltrim(ltrim($column, '+'), ' ');
 
-                if (str_contains($column, '->')) { // JSON
-
-                    $json = explode('->', $column, 2);
-                    $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "'";
-
-                }
+                $column = $this->parseConditionColumn($column);
 
                 $string .= $column . ' ASC, ';
 
@@ -601,6 +623,33 @@ class Query
     }
 
     /**
+     * Format the result of a query.
+     *
+     * @param array $result
+     * @return array
+     */
+    private function formatResult(array $result): array
+    {
+
+        foreach ($result as $k => $v) {
+
+            if (str_contains($k, "->>'$.")) { // JSON
+
+                $arr = explode("->>'$.", rtrim($k, "'"), 2);
+                $col = $arr[0];
+
+                Arr::set($result, $col . '.' . $arr[1], $v);
+                unset($result[$k]);
+
+            }
+
+        }
+
+        return $result;
+
+    }
+
+    /**
      * Get the result set from a table.
      *
      * @return array
@@ -612,7 +661,18 @@ class Query
 
         $stmt->execute($this->placeholders);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (is_array($result)) {
+
+            foreach ($result as $k => $v) {
+                $result[$k] = $this->formatResult($v);
+            }
+
+        }
+
+        return $result;
+
     }
 
     /**
@@ -627,7 +687,14 @@ class Query
 
         $stmt->execute($this->placeholders);
 
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (is_array($result)) {
+            return $this->formatResult($result);
+        }
+
+        return $result;
+
     }
 
     /**

@@ -145,8 +145,8 @@ Add `RIGHT JOIN` clause to the query.
 Define column(s) to select.
 
 If the column type is `json`, keys from within the JSON string can be selected with the format of `{column}->{key}`.
-The field will be returned with the format of `{column}_{key}`.
-JSON fields which do not exist are treated as `null`.
+The field will be returned as a multidimensional array.
+JSON fields which do not exist are returned with a value of `null`.
 
 **Parameters:**
 
@@ -315,6 +315,7 @@ Get a single row from a table, or `false` on failure.
 **Description:**
 
 Get a single column of a single row of a table, or `false` if not existing.
+If more than one field was defined by [select](#select), the first field will be returned.
 
 **Parameters:**
 
@@ -395,7 +396,7 @@ $results = $query->table('items')
 
 <hr />
 
-Select `name`, `color`, `quantity` and `supplier->location` records from `items` table where `price` is greater than `20.00` and `supplier->name` starts with `a`:
+Select `name`, `color`, `quantity`, `supplier->location` and `supplier->email` as `supplier_email` records from `items` table where `price` is greater than `20.00` and `supplier->name` starts with `a`:
 
 ```
 $results = $query->table('items')
@@ -403,7 +404,8 @@ $results = $query->table('items')
         'name',
         'color',
         'quantity',
-        'supplier->location'
+        'supplier->location',
+        'supplier->email AS supplier_email'
     ])
     ->where('price', 'gt', '20.00')
     ->where('supplier->name', 'sw', 'a')
