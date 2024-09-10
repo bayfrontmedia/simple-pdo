@@ -107,10 +107,9 @@ class Query
     /**
      * Define column(s) to select.
      *
-     * If the column type is json, keys from within the JSON string can be selected with the format of {column}->{key}.
-     * The field will be returned with the format of {column}_{key}.
-     *
-     * JSON fields which do not exist are treated as null.
+     * If the column type is JSON, keys from within the JSON string can be selected with the format of {column}->{key}.
+     * The field will be returned as a multidimensional array.
+     * JSON fields which do not exist are returned with a value of null.
      *
      * @param array|string $columns
      * @return self
