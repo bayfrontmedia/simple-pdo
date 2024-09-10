@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `getConnections` method to `getConnectionNames`.
 - Renamed `isConnected` method to `connectionExists`.
 
+### Removed
+
+- Removed need for `php-string-helpers` dependency.
+
 ## [3.0.0] - 2023.05.10
 
 ### Added

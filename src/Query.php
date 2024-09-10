@@ -4,7 +4,6 @@ namespace Bayfront\PDO;
 
 use Bayfront\ArrayHelpers\Arr;
 use Bayfront\PDO\Exceptions\QueryException;
-use Bayfront\StringHelpers\Str;
 use PDO;
 
 class Query
@@ -502,7 +501,7 @@ class Query
 
         foreach ($columns as $column) {
 
-            if (Str::startsWith($column, '-')) {
+            if (str_starts_with($column, '-')) {
 
                 $column = ltrim($column, '-');
 
