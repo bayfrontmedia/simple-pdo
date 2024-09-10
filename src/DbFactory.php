@@ -13,14 +13,11 @@ class DbFactory
      * Create Simple PDO instance from configuration array.
      *
      * @param array $array
-     *
      * @return Db
-     *
      * @throws ConfigurationException
      * @throws InvalidDatabaseException
      * @throws UnableToConnectException
      */
-
     public static function create(array $array): Db
     {
 

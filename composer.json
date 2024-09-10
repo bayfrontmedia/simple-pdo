@@ -35,5 +35,6 @@
     "psr-4": {
       "Bayfront\\PDO\\": "src/"
     }
-  }
+  },
+  "version": "3.1"
 }

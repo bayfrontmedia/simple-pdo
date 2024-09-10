@@ -32,9 +32,7 @@ class Query
 
     public function __construct(PDO $pdo)
     {
-
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); // Throw exceptions
-
         $this->pdo = $pdo;
     }
 
@@ -45,7 +43,6 @@ class Query
      * @param string $table
      * @return self
      */
-
     public function table(string $table): self
     {
         $this->query['from'] = ' FROM ' . $table;
@@ -60,11 +57,9 @@ class Query
      *
      * @return self
      */
-
     public function distinct(): self
     {
         $this->query['distinct'] = 'DISTINCT ';
-
         return $this;
     }
 
@@ -76,14 +71,10 @@ class Query
      * @param string $col2
      * @return self
      */
-
     public function innerJoin(string $table, string $col1, string $col2): self
     {
-
         $this->query['inner_join'] = ' INNER JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
-
         return $this;
-
     }
 
     /**
@@ -94,14 +85,10 @@ class Query
      * @param string $col2
      * @return self
      */
-
     public function leftJoin(string $table, string $col1, string $col2): self
     {
-
         $this->query['left_join'] = ' LEFT JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
-
         return $this;
-
     }
 
     /**
@@ -112,14 +99,10 @@ class Query
      * @param string $col2
      * @return self
      */
-
     public function rightJoin(string $table, string $col1, string $col2): self
     {
-
         $this->query['right_join'] = ' RIGHT JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
-
         return $this;
-
     }
 
     /**
@@ -133,7 +116,6 @@ class Query
      * @param array|string $columns
      * @return self
      */
-
     public function select(array|string $columns): self
     {
 
@@ -297,7 +279,6 @@ class Query
      * @return self
      * @throws QueryException
      */
-
     public function where(string $column, string $operator, mixed $value): self
     {
 
@@ -510,7 +491,6 @@ class Query
      * @param array $columns
      * @return self
      */
-
     public function orderBy(array $columns): self
     {
 
@@ -558,14 +538,10 @@ class Query
      *
      * @return self
      */
-
     public function orderByRand(): self
     {
-
         $this->query['sort'] = ' ORDER BY RAND()';
-
         return $this;
-
     }
 
     /**
@@ -574,14 +550,10 @@ class Query
      * @param int $limit
      * @return self
      */
-
     public function limit(int $limit): self
     {
-
         $this->query['limit'] = ' LIMIT ' . $limit;
-
         return $this;
-
     }
 
     /**
@@ -590,14 +562,10 @@ class Query
      * @param int $offset
      * @return self
      */
-
     public function offset(int $offset): self
     {
-
         $this->query['offset'] = ' OFFSET ' . $offset;
-
         return $this;
-
     }
 
     /**
@@ -605,7 +573,6 @@ class Query
      *
      * @return string
      */
-
     protected function getQuery(): string
     {
 
@@ -654,7 +621,6 @@ class Query
      *
      * @return array
      */
-
     public function get(): array
     {
         $stmt = $this->pdo->prepare($this->getQuery());
@@ -680,7 +646,6 @@ class Query
      *
      * @return mixed
      */
-
     public function row(): mixed
     {
         $stmt = $this->pdo->prepare($this->getQuery());
@@ -702,7 +667,6 @@ class Query
      *
      * @return mixed
      */
-
     public function single(): mixed
     {
         $stmt = $this->pdo->prepare($this->getQuery());
@@ -717,7 +681,6 @@ class Query
      *
      * @return string
      */
-
     public function getLastQuery(): string
     {
         return $this->getQuery();
@@ -728,7 +691,6 @@ class Query
      *
      * @return array
      */
-
     public function getLastParameters(): array
     {
         return $this->placeholders;
@@ -741,7 +703,6 @@ class Query
      *
      * @return int
      */
-
     public function getTotalRows(): int
     {
         $query = 'SELECT COUNT(*)'
