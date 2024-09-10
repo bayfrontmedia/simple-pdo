@@ -144,7 +144,7 @@ Add `RIGHT JOIN` clause to the query.
 
 Define column(s) to select.
 
-If the column type is `json`, keys from within the JSON string can be selected with the format of `COLUMN->KEY`.
+If the column type is `JSON`, keys from within the JSON string can be selected with the format of `COLUMN->KEY`.
 The field will be returned as a multidimensional array.
 JSON fields which do not exist are returned with a value of `null`.
 
@@ -164,7 +164,7 @@ JSON fields which do not exist are returned with a value of `null`.
 
 Adds a `WHERE` clause to the query.
 
-If the column type is `json`, keys from within the JSON string can be searched with the format of `COLUMN->KEY`.
+If the column type is `JSON`, keys from within the JSON string can be searched with the format of `COLUMN->KEY`.
 JSON fields which do not exist are treated as `null`.
 
 Available operators are:
@@ -185,12 +185,15 @@ Available operators are:
 - `!in` (not in)
 - `null` (is or is not `null`)
 
+The `OPERATOR_*` constants can be used for this purpose.
+
 The `in` and `!in` operators accept multiple comma-separated values.
 
 The `null` operator accepts two values: `true` and `false` for `is null` or `is not null`.
+The `VALUE_*` constants can be used for this purpose.
 
-> **NOTE:** Some native MySQL functions can be used as the `$value`, however they will be
-> injected into the query as strings, so they are vulnerable to SQL injection. 
+> **NOTE:** Some native MySQL functions can be used as the `$value`, however, they will be
+> injected into the query as strings, so they can be vulnerable to SQL injection. 
 
 **Parameters:**
 
@@ -217,7 +220,7 @@ Adds an `ORDER BY` clause.
 Values in the `$columns` array without a prefix or prefixed with a `+` will be ordered ascending.
 Values in the `$columns` array prefixed with a `-` will be ordered descending.
 
-If the column type is `json`, keys from within the JSON string can be ordered with the format of `COLUMN->KEY`.
+If the column type is `JSON`, keys from within the JSON string can be ordered with the format of `COLUMN->KEY`.
 JSON fields which do not exist are treated as `null`.
 
 **Parameters:**
