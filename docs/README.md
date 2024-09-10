@@ -1,6 +1,6 @@
 # Documentation
 
-**NOTE:** All exceptions thrown by Simple PDO extend `Bayfront\PDO\Exceptions\SimplePDOException`,
+**NOTE:** All exceptions thrown by Simple PDO extend `Bayfront\SimplePdo\Exceptions\SimplePDOException`,
 so you can choose to catch exceptions as narrowly or broadly as you like.
 
 First, see [getting started](getting-started.md) to create a Simple PDO instance.
@@ -70,7 +70,7 @@ Add a PDO instance.
 
 **Throws:**
 
-- `Bayfront\PDO\Exceptions\InvalidDatabaseException`
+- `Bayfront\SimplePdo\Exceptions\InvalidDatabaseException`
 
 **Example:**
 
@@ -104,7 +104,7 @@ After the next query, the current database will automatically revert to the defa
 
 **Throws:**
 
-- `Bayfront\PDO\Exceptions\InvalidDatabaseException`
+- `Bayfront\SimplePdo\Exceptions\InvalidDatabaseException`
 
 **Example:**
 
@@ -124,19 +124,19 @@ try {
 
 **Description:**
 
-Returns the raw PDO instance of a given database.
+Returns the raw `PDO` instance of a given database.
 
 **Parameters:**
 
-- `$db_name = ''` (string): Leaving this parameter blank will return the PDO instance of the current database
+- `$db_name = ''` (string): Leaving this parameter blank will return the `PDO` instance of the current database
 
 **Returns:**
 
-- (PDO)
+- (`PDO`)
 
 **Throws:**
 
-- `Bayfront\PDO\Exceptions\InvalidDatabaseException`
+- `Bayfront\SimplePdo\Exceptions\InvalidDatabaseException`
 
 **Example:**
 
@@ -156,7 +156,7 @@ try {
 
 **Description:**
 
-Returns the raw PDO instance of the current database.
+Returns the raw `PDO` instance of the current database.
 
 **Parameters:**
 
@@ -164,7 +164,7 @@ Returns the raw PDO instance of the current database.
 
 **Returns:**
 
-- (PDO)
+- (`PDO`)
 
 **Example:**
 

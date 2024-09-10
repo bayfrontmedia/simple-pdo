@@ -1,8 +1,8 @@
 <?php
 
-namespace Bayfront\PDO\Interfaces;
+namespace Bayfront\SimplePdo\Interfaces;
 
-use Bayfront\PDO\Exceptions;
+use Bayfront\SimplePdo\Exceptions;
 use PDO;
 
 interface AdapterInterface

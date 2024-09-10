@@ -1,11 +1,11 @@
 <?php
 
-namespace Bayfront\PDO\Adapters;
+namespace Bayfront\SimplePdo\Adapters;
 
 use Bayfront\ArrayHelpers\Arr;
-use Bayfront\PDO\Exceptions\ConfigurationException;
-use Bayfront\PDO\Exceptions\UnableToConnectException;
-use Bayfront\PDO\Interfaces\AdapterInterface;
+use Bayfront\SimplePdo\Exceptions\ConfigurationException;
+use Bayfront\SimplePdo\Exceptions\UnableToConnectException;
+use Bayfront\SimplePdo\Interfaces\AdapterInterface;
 use PDO;
 use PDOException;
 

@@ -1,8 +1,8 @@
 <?php
 
-namespace Bayfront\PDO;
+namespace Bayfront\SimplePdo;
 
-use Bayfront\PDO\Exceptions\InvalidDatabaseException;
+use Bayfront\SimplePdo\Exceptions\InvalidDatabaseException;
 use PDO;
 use PDOStatement;
 

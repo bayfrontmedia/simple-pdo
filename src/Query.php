@@ -1,9 +1,9 @@
 <?php
 
-namespace Bayfront\PDO;
+namespace Bayfront\SimplePdo;
 
 use Bayfront\ArrayHelpers\Arr;
-use Bayfront\PDO\Exceptions\QueryException;
+use Bayfront\SimplePdo\Exceptions\QueryException;
 use PDO;
 
 class Query

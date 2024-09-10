@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `getConnections` method to `getConnectionNames`.
 - Renamed `isConnected` method to `connectionExists`.
 - Updated documentation.
+- Changed namespace from `Bayfront\PDO` to `Bayfront\SimplePdo`
 
 ### Removed
 

@@ -14,7 +14,7 @@ The query builder requires a `PDO` instance to be passed to the constructor.
 **Example:**
 
 ```php
-use Bayfront\PDO\Query;
+use Bayfront\SimplePdo\Query;
 
 $pdo = new PDO(
     'mysql:host=DB_HOST;dbname=DB_TO_USE',
@@ -204,7 +204,7 @@ The `null` operator accepts two values: `true` and `false` for `is null` or `is 
 
 **Throws:**
 
-- `Bayfront\PDO\Exceptions\QueryException`
+- `Bayfront\SimplePdo\Exceptions\QueryException`
 
 <hr />
 

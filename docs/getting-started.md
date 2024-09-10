@@ -31,12 +31,12 @@ Each adapter has its own required configuration array keys, as listed below.
 To create a `PDO` instance, use the adapter's `connect()` static method,
 which may throw the following exceptions on failure:
 
-- `Bayfront\PDO\Exceptions\ConfigurationException`- Invalid adapter configuration
-- `Bayfront\PDO\Exceptions\UnableToConnectException`- Unable to connect to database
+- `Bayfront\SimplePdo\Exceptions\ConfigurationException`- Invalid adapter configuration
+- `Bayfront\SimplePdo\Exceptions\UnableToConnectException`- Unable to connect to database
 
 ```php
-use Bayfront\PDO\Adapters\MySql;
-use Bayfront\PDO\Exceptions\SimplePDOException;
+use Bayfront\SimplePdo\Adapters\MySql;
+use Bayfront\SimplePdo\Exceptions\SimplePDOException;
 
 $config = [
     'host' => 'DB_HOST',
@@ -61,7 +61,7 @@ try {
 Once you have a `PDO` instance created, you can then use it as your default database with Simple PDO:
 
 ```php
-use Bayfront\PDO\Db;
+use Bayfront\SimplePdo\Db;
 
 $db = new Db($pdo); // $pdo as a PDO instance
 ```
@@ -74,7 +74,7 @@ If, however, you will be working with multiple databases and wish to reference t
 you can assign it any name you like:
 
 ```php
-use Bayfront\PDO\Db;
+use Bayfront\SimplePdo\Db;
 
 $db = new Db($pdo, 'custom_name'); // $pdo as a PDO instance
 ```
@@ -87,13 +87,13 @@ and the factory will use adapters to automatically create and add all of them fo
 
 The `create` static method may throw the following exceptions on failure:
 
-- `Bayfront\PDO\Exceptions\ConfigurationException`
-- `Bayfront\PDO\Exceptions\InvalidDatabaseException`
-- `Bayfront\PDO\Exceptions\UnableToConnectException`
+- `Bayfront\SimplePdo\Exceptions\ConfigurationException`
+- `Bayfront\SimplePdo\Exceptions\InvalidDatabaseException`
+- `Bayfront\SimplePdo\Exceptions\UnableToConnectException`
 
 ```php
-use Bayfront\PDO\DbFactory;
-use Bayfront\PDO\Exceptions\SimplePDOException;
+use Bayfront\SimplePdo\DbFactory;
+use Bayfront\SimplePdo\Exceptions\SimplePDOException;
 
 $config = [ 
     'primary' => [ // Connection name
