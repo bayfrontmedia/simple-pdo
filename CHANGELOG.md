@@ -12,6 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities
 
+## [4.0.0] - 2024.09.10
+
+### Added
+
+- Added `DB_DEFAULT` constant.
+
+### Changed
+
+- Renamed `add` method to `addConnection`.
+- Renamed `use` method to `useConnection`.
+- Renamed `get` method to `getConnection`.
+- Renamed `getDefault` method to `getDefaultConnectionName`.
+- Renamed `getCurrent` method to `getCurrentConnectionName`.
+- Renamed `getConnections` to `getConnectionNames`.
+
 ## [3.0.0] - 2023.05.10
 
 ### Added

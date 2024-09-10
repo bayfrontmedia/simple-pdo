@@ -107,7 +107,7 @@ use Bayfront\PDO\Db;
 $db = new Db($pdo); // $pdo as a PDO instance
 ```
 
-By default, the PDO instance passed to the constructor will be named "default". If you will only be using one database connection, there would never be a need to change this. If, however, you will be working with multiple databases and wish to reference this connection by a different name, you can assign it any name you like:
+By default, the PDO instance passed to the constructor will be named "default". This name is available as a `Db::DB_DEFAULT` constant. If you will only be using one database connection, there would never be a need to change this. If, however, you will be working with multiple databases and wish to reference this connection by a different name, you can assign it any name you like:
 
 ```
 use Bayfront\PDO\Db;
@@ -176,12 +176,12 @@ For more information, see [query builder](_docs/query-builder.md).
 
 **Database connections**
 
-- [add](#add)
-- [use](#use)
-- [get](#get)
-- [getDefault](#getdefault)
-- [getCurrent](#getcurrent)
-- [getConnections](#getconnections)
+- [addConnection](#addconnection)
+- [useConnection](#useconnection)
+- [getConnection](#getconnection)
+- [getDefaultConnectionName](#getdefaultconnectionname)
+- [getCurrentConnectionName](#getcurrentconnectionname)
+- [getConnectionNames](#getconnectionnames)
 - [isConnected](#isconnected)
 
 **Queries**
@@ -211,7 +211,7 @@ For more information, see [query builder](_docs/query-builder.md).
 
 <hr />
 
-### add
+### addConnection
 
 **Description:**
 
@@ -237,7 +237,7 @@ Add a PDO instance.
 ```
 try {
 
-    $db->add($pdo, 'backup'); // Assuming $pdo is a PDO instance
+    $db->addConnection($pdo, 'backup'); // Assuming $pdo is a PDO instance
 
 } catch (InvalidDatabaseException $e) {
     echo $e->getMessage();
@@ -246,7 +246,7 @@ try {
 
 <hr />
 
-### use
+### useConnection
 
 **Description:**
 
@@ -270,7 +270,7 @@ Set given database name as current. After the next query, the current database w
 ```
 try {
 
-    $db->use('backup');
+    $db->useConnection('backup');
 
 } catch (InvalidDatabaseException $e) {
     echo $e->getMessage();
@@ -279,7 +279,7 @@ try {
 
 <hr />
 
-### get
+### getConnection
 
 **Description:**
 
@@ -302,7 +302,7 @@ Returns the raw PDO instance of a given database.
 ```
 try {
 
-    $pdo = $db->get('backup');
+    $pdo = $db->getConnection('backup');
 
 } catch (InvalidDatabaseException $e) {
     echo $e->getMessage();
@@ -311,7 +311,7 @@ try {
 
 <hr />
 
-### getDefault
+### getDefaultConnectionName
 
 **Description:**
 
@@ -328,12 +328,12 @@ Returns name of the default database.
 **Example:**
 
 ```
-echo $db->getDefault();
+echo $db->getDefaultConnectionName();
 ```
 
 <hr />
 
-### getCurrent
+### getCurrentConnectionName
 
 **Description:**
 
@@ -350,12 +350,12 @@ Returns name of the database currently being used.
 **Example:**
 
 ```
-echo $db->getCurrent();
+echo $db->getCurrentConnectionName();
 ```
 
 <hr />
 
-### getConnections
+### getConnectionNames
 
 **Description:**
 
@@ -372,7 +372,7 @@ Returns array of all database connection names.
 **Example:**
 
 ```
-print_r($db->getConnections());
+print_r($db->getConnectionNames());
 ```
 
 <hr />

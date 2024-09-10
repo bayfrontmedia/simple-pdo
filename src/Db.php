@@ -13,6 +13,8 @@ class Db
     private string $default_db_name;
     private string $current_db_name;
 
+    public const DB_DEFAULT = 'default';
+
     /**
      * Constructor.
      *
@@ -21,7 +23,7 @@ class Db
      * @param PDO $pdo
      * @param string $db_name
      */
-    public function __construct(PDO $pdo, string $db_name = 'default')
+    public function __construct(PDO $pdo, string $db_name = self::DB_DEFAULT)
     {
         self::$db_connections[$db_name] = $pdo;
         $this->default_db_name = $db_name;
@@ -40,30 +42,25 @@ class Db
      */
     private function disconnectAll(): void
     {
-
         foreach (self::$db_connections as $k => $connection) {
-
             self::$db_connections[$k] = NULL;
             unset(self::$db_connections[$k]);
-
         }
-
     }
 
     /**
      * Returns PDO object for current database name and resets current connection to default.
      *
+     * TODO:
+     * Revisit this...
+     *
      * @return PDO
      */
-    private function getConnection(): PDO
+    private function getCurrentConnection(): PDO
     {
-
         $current = self::$db_connections[$this->current_db_name];
-
         $this->current_db_name = $this->default_db_name; // Reset current connection to default
-
         return $current;
-
     }
 
     /*
@@ -82,27 +79,21 @@ class Db
      * @return self
      * @throws InvalidDatabaseException
      */
-    public function add(PDO $pdo, string $db_name, bool $make_current = false, bool $make_default = false): self
+    public function addConnection(PDO $pdo, string $db_name, bool $make_current = false, bool $make_default = false): self
     {
 
         if (isset(self::$db_connections[$db_name])) {
-
             throw new InvalidDatabaseException('Database name already used');
-
         }
 
         self::$db_connections[$db_name] = $pdo;
 
         if (true === $make_current) {
-
             $this->current_db_name = $db_name;
-
         }
 
         if (true === $make_default) {
-
             $this->default_db_name = $db_name;
-
         }
 
         return $this;
@@ -119,7 +110,7 @@ class Db
      * @return self
      * @throws InvalidDatabaseException
      */
-    public function use(string $db_name, bool $make_default = false): self
+    public function useConnection(string $db_name, bool $make_default = false): self
     {
 
         if (!isset(self::$db_connections[$db_name])) {
@@ -143,7 +134,7 @@ class Db
      * @return PDO
      * @throws InvalidDatabaseException
      */
-    public function get(string $db_name = ''): PDO
+    public function getConnection(string $db_name = ''): PDO
     {
 
         if ($db_name == '') {
@@ -163,7 +154,7 @@ class Db
      *
      * @return string
      */
-    public function getDefault(): string
+    public function getDefaultConnectionName(): string
     {
         return $this->default_db_name;
     }
@@ -173,7 +164,7 @@ class Db
      *
      * @return string
      */
-    public function getCurrent(): string
+    public function getCurrentConnectionName(): string
     {
         return $this->current_db_name;
     }
@@ -183,7 +174,7 @@ class Db
      *
      * @return array
      */
-    public function getConnections(): array
+    public function getConnectionNames(): array
     {
         return array_keys(self::$db_connections);
     }
@@ -231,7 +222,7 @@ class Db
      */
     private function prepare(string $query): PDOStatement
     {
-        return $this->getConnection()->prepare($query); // PDOStatement object
+        return $this->getCurrentConnection()->prepare($query); // PDOStatement object
     }
 
     /**
