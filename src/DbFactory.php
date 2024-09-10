@@ -79,7 +79,7 @@ class DbFactory
              * @throws Bayfront\PDO\Exceptions\InvalidDatabaseException
              */
 
-            $db->add($pdo, $name); // Add all additional connections
+            $db->addConnection($pdo, $name); // Add all additional connections
 
         }
 
