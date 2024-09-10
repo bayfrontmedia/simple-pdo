@@ -1,4 +1,4 @@
-# Query builder
+# Documentation > Query builder
 
 Simple PDO includes a helpful query builder which you may choose to utilize.
 A query builder is useful to dynamically create queries, 
@@ -13,7 +13,7 @@ The query builder requires a `PDO` instance to be passed to the constructor.
 
 **Example:**
 
-```
+```php
 use Bayfront\PDO\Query;
 
 $pdo = new PDO(
@@ -377,7 +377,7 @@ Returns total number of rows found for the query without limit restrictions.
 
 Select all records from `items` table:
 
-```
+```php
 $results = $query->table('items')
     ->select('*')
     ->get();
@@ -387,7 +387,7 @@ $results = $query->table('items')
 
 Select all records from `items` table where `price` is greater than `20.00`:
 
-```
+```php
 $results = $query->table('items')
     ->select('*')
     ->where('price', 'gt', '20.00')
@@ -398,7 +398,7 @@ $results = $query->table('items')
 
 Select `name`, `color`, `quantity`, `supplier->location` and `supplier->email` as `supplier_email` records from `items` table where `price` is greater than `20.00` and `supplier->name` starts with `a`:
 
-```
+```php
 $results = $query->table('items')
     ->select([
         'name',
@@ -419,7 +419,7 @@ This example represents a column named `supplier` with type of `json`.
 Select up to 10 results for `name`, `color`, `quantity` from `items` table where `description` contains the word "fluffy", and the price is less than `50.00`, ordered by `name` descending.
 Also, get the total number of rows found for the query without limit restrictions.
 
-```
+```php
 $results = $query->table('items')
     ->select([
         'name',
@@ -441,7 +441,7 @@ $total_count = $query->getTotalRows();
 
 Example using `LEFT JOIN`:
 
-```
+```php
 $results = $query->table('items')
     ->leftJoin('vendors', 'items.vendor_id', 'vendors.id')
     ->select([

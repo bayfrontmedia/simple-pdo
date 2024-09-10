@@ -5,6 +5,7 @@ namespace Bayfront\PDO;
 use Bayfront\PDO\Exceptions\ConfigurationException;
 use Bayfront\PDO\Exceptions\InvalidDatabaseException;
 use Bayfront\PDO\Exceptions\UnableToConnectException;
+use Bayfront\PDO\Interfaces\AdapterInterface;
 
 class DbFactory
 {

@@ -51,9 +51,6 @@ class Db
     /**
      * Returns PDO object for current database name and resets current connection to default.
      *
-     * TODO:
-     * Revisit this...
-     *
      * @return PDO
      */
     private function getCurrentConnectionAndReset(): PDO
