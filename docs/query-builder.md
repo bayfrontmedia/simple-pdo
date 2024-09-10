@@ -144,7 +144,7 @@ Add `RIGHT JOIN` clause to the query.
 
 Define column(s) to select.
 
-If the column type is `json`, keys from within the JSON string can be selected with the format of `{column}->{key}`.
+If the column type is `json`, keys from within the JSON string can be selected with the format of `COLUMN->KEY`.
 The field will be returned as a multidimensional array.
 JSON fields which do not exist are returned with a value of `null`.
 
@@ -164,7 +164,7 @@ JSON fields which do not exist are returned with a value of `null`.
 
 Adds a `WHERE` clause to the query.
 
-If the column type is `json`, keys from within the JSON string can be searched with the format of `{column}->{key}`.
+If the column type is `json`, keys from within the JSON string can be searched with the format of `COLUMN->KEY`.
 JSON fields which do not exist are treated as `null`.
 
 Available operators are:
@@ -217,7 +217,7 @@ Adds an `ORDER BY` clause.
 Values in the `$columns` array without a prefix or prefixed with a `+` will be ordered ascending.
 Values in the `$columns` array prefixed with a `-` will be ordered descending.
 
-If the column type is `json`, keys from within the JSON string can be ordered with the format of `{column}->{key}`.
+If the column type is `json`, keys from within the JSON string can be ordered with the format of `COLUMN->KEY`.
 JSON fields which do not exist are treated as `null`.
 
 **Parameters:**
@@ -364,6 +364,8 @@ Returns last query parameters.
 **Description:**
 
 Returns total number of rows found for the query without limit restrictions.
+
+NOTE: To get the number of rows affected by a `DELETE`, use the [Bayfront\SimplePdo\Db->rowCount()](README.md#rowcount) method.
 
 **Parameters:**
 
