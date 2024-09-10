@@ -56,7 +56,7 @@ class Db
      *
      * @return PDO
      */
-    private function getCurrentConnection(): PDO
+    private function getCurrentConnectionAndReset(): PDO
     {
         $current = self::$db_connections[$this->current_db_name];
         $this->current_db_name = $this->default_db_name; // Reset current connection to default
@@ -74,8 +74,8 @@ class Db
      *
      * @param PDO $pdo
      * @param string $db_name (Name must be unique)
-     * @param bool $make_current
-     * @param bool $make_default
+     * @param bool $make_current (Use this connection for the next query only)
+     * @param bool $make_default (Use this connection for each subsequent query)
      * @return self
      * @throws InvalidDatabaseException
      */
@@ -101,8 +101,7 @@ class Db
     }
 
     /**
-     * Set given database name as current.
-     *
+     * Set given database name as current for the next query only.
      * After the next query, the current database will automatically revert to the default database.
      *
      * @param string $db_name
@@ -150,6 +149,16 @@ class Db
     }
 
     /**
+     * Returns the raw PDO instance of the current database.
+     *
+     * @return PDO
+     */
+    public function getCurrentConnection(): PDO
+    {
+        return self::$db_connections[$this->current_db_name];
+    }
+
+    /**
      * Returns name of the default database.
      *
      * @return string
@@ -180,12 +189,12 @@ class Db
     }
 
     /**
-     * Checks if connected to a given database name.
+     * Checks if a database connection exists with a given name.
      *
      * @param string $db_name
      * @return bool
      */
-    public function isConnected(string $db_name): bool
+    public function connectionExists(string $db_name): bool
     {
         return isset(self::$db_connections[$db_name]);
     }
@@ -222,7 +231,7 @@ class Db
      */
     private function prepare(string $query): PDOStatement
     {
-        return $this->getCurrentConnection()->prepare($query); // PDOStatement object
+        return $this->getCurrentConnectionAndReset()->prepare($query); // PDOStatement object
     }
 
     /**

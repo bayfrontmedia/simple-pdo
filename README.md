@@ -179,10 +179,11 @@ For more information, see [query builder](_docs/query-builder.md).
 - [addConnection](#addconnection)
 - [useConnection](#useconnection)
 - [getConnection](#getconnection)
+- [getCurrentConnection](#getcurrentconnection)
 - [getDefaultConnectionName](#getdefaultconnectionname)
 - [getCurrentConnectionName](#getcurrentconnectionname)
 - [getConnectionNames](#getconnectionnames)
-- [isConnected](#isconnected)
+- [connectionExists](#connectionexists)
 
 **Queries**
 
@@ -221,8 +222,8 @@ Add a PDO instance.
 
 - `$pdo` (PDO)
 - `$db_name` (string): Name must be unique
-- `$make_current = false` (bool)
-- `$make_default = false` (bool)
+- `$make_current = false` (bool): Use this connection for the next query only
+- `$make_default = false` (bool): Use this connection for each subsequent query
 
 **Returns:**
 
@@ -250,7 +251,8 @@ try {
 
 **Description:**
 
-Set given database name as current. After the next query, the current database will automatically revert to the default database.
+Set given database name as current for the next query only.
+After the next query, the current database will automatically revert to the default database.
 
 **Parameters:**
 
@@ -307,6 +309,28 @@ try {
 } catch (InvalidDatabaseException $e) {
     echo $e->getMessage();
 }
+```
+
+<hr />
+
+### getCurrentConnection
+
+**Description:**
+
+Returns the raw PDO instance of the current database.
+
+**Parameters:**
+
+- None
+
+**Returns:**
+
+- (PDO)
+
+**Example:**
+
+```
+$pdo = $db->getCurrentConnection();
 ```
 
 <hr />
@@ -377,11 +401,11 @@ print_r($db->getConnectionNames());
 
 <hr />
 
-### isConnected
+### connectionExists
 
 **Description:**
 
-Checks if connected to a given database name.
+Checks if a database connection exists with a given name.
 
 **Parameters:**
 
@@ -394,7 +418,7 @@ Checks if connected to a given database name.
 **Example:**
 
 ```
-if ($db->isConnected('backup')) {
+if ($db->connectionExists('backup')) {
     // Do something
 }
 ```

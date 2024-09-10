@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `DB_DEFAULT` constant.
+- Added `getCurrentConnection` method.
 
 ### Changed
 
@@ -25,7 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `get` method to `getConnection`.
 - Renamed `getDefault` method to `getDefaultConnectionName`.
 - Renamed `getCurrent` method to `getCurrentConnectionName`.
-- Renamed `getConnections` to `getConnectionNames`.
+- Renamed `getConnections` method to `getConnectionNames`.
+- Renamed `isConnected` method to `connectionExists`.
 
 ## [3.0.0] - 2023.05.10
 
