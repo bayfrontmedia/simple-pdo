@@ -13,6 +13,12 @@ such as for an API to create a query based on the URL query string.
 The query builder requires a `PDO` instance to be passed to the constructor.
 [Click here](pdo.md) for more information on creating a `PDO` instance.
 
+```php
+use Bayfront\SimplePdo\Query;
+
+$query = new Query($pdo); // $pdo as a PDO instance
+```
+
 ## Public methods
 
 **Build query**
