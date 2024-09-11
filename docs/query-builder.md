@@ -11,7 +11,7 @@ such as for an API to create a query based on the URL query string.
 ## Usage
 
 The query builder requires a `PDO` instance to be passed to the constructor.
-[Click here](pdo.md) for more information on creating a `PDO` instance.
+For more information on creating a `PDO` instance, [see PDO](pdo.md).
 
 ```php
 use Bayfront\SimplePdo\Query;
@@ -387,9 +387,11 @@ $results = $query->table('items')
 Select all records from `items` table where `price` is greater than `20.00`:
 
 ```php
+use Bayfront\SimplePdo\Query;
+
 $results = $query->table('items')
     ->select('*')
-    ->where('price', 'gt', '20.00')
+    ->where('price', Query::OPERATOR_GREATER_THAN, '20.00')
     ->get();
 ```
 
@@ -398,6 +400,8 @@ $results = $query->table('items')
 Select `name`, `color`, `quantity`, `supplier->location` and `supplier->email` as `supplier_email` records from `items` table where `price` is greater than `20.00` and `supplier->name` starts with `a`:
 
 ```php
+use Bayfront\SimplePdo\Query;
+
 $results = $query->table('items')
     ->select([
         'name',
@@ -406,8 +410,8 @@ $results = $query->table('items')
         'supplier->location',
         'supplier->email AS supplier_email'
     ])
-    ->where('price', 'gt', '20.00')
-    ->where('supplier->name', 'sw', 'a')
+    ->where('price', Query::OPERATOR_GREATER_THAN, '20.00')
+    ->where('supplier->name', Query::OPERATOR_STARTS_WITH, 'a')
     ->get();
 ```
 
@@ -419,14 +423,16 @@ Select up to 10 results for `name`, `color`, `quantity` from `items` table where
 Also, get the total number of rows found for the query without limit restrictions.
 
 ```php
+use Bayfront\SimplePdo\Query;
+
 $results = $query->table('items')
     ->select([
         'name',
         'color',
         'quantity'
     ])
-    ->where('description', 'has', 'fluffy')
-    ->where('price', 'lt', '50.00')
+    ->where('description', Query::OPERATOR_HAS, 'fluffy')
+    ->where('price', Query::OPERATOR_LESS_THAN, '50.00')
     ->orderBy([
         '-name'
     ])
@@ -441,6 +447,8 @@ $total_count = $query->getTotalRows();
 Example using `LEFT JOIN`:
 
 ```php
+use Bayfront\SimplePdo\Query;
+
 $results = $query->table('items')
     ->leftJoin('vendors', 'items.vendor_id', 'vendors.id')
     ->select([
@@ -449,8 +457,8 @@ $results = $query->table('items')
         'items.color',
         'items.quantity'
     ])
-    ->where('items.description', 'has', 'fluffy')
-    ->where('items.price', 'lt', '50.00')
+    ->where('items.description', Query::OPERATOR_HAS, 'fluffy')
+    ->where('items.price', Query::OPERATOR_LESS_THAN, '50.00')
     ->orderBy([
         'vendors.name',
         '-items.name'
