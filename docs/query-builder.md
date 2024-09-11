@@ -5,28 +5,15 @@ A query builder is useful to dynamically create queries,
 such as for an API to create a query based on the URL query string.
 
 - [Usage](#usage)
+- [Public methods](#public-methods)
 - [Examples](#examples)
 
 ## Usage
 
 The query builder requires a `PDO` instance to be passed to the constructor.
-For more information on creating a `PDO` instance, see [getting started](getting-started.md#create-a-pdo-instance).
+[Click here](pdo.md) for more information on creating a `PDO` instance.
 
-**Example:**
-
-```php
-use Bayfront\SimplePdo\Query;
-
-$pdo = new PDO(
-    'mysql:host=DB_HOST;dbname=DB_TO_USE',
-    'DB_USER',
-    'DB_USER_PASSWORD'
-);
-
-$query = new Query($pdo);
-``` 
-
-### Public methods
+## Public methods
 
 **Build query**
 
