@@ -1,10 +1,11 @@
 <?php
 
-namespace Bayfront\PDO;
+namespace Bayfront\SimplePdo;
 
-use Bayfront\PDO\Exceptions\ConfigurationException;
-use Bayfront\PDO\Exceptions\InvalidDatabaseException;
-use Bayfront\PDO\Exceptions\UnableToConnectException;
+use Bayfront\SimplePdo\Exceptions\ConfigurationException;
+use Bayfront\SimplePdo\Exceptions\InvalidDatabaseException;
+use Bayfront\SimplePdo\Exceptions\UnableToConnectException;
+use Bayfront\SimplePdo\Interfaces\AdapterInterface;
 
 class DbFactory
 {
@@ -13,14 +14,11 @@ class DbFactory
      * Create Simple PDO instance from configuration array.
      *
      * @param array $array
-     *
      * @return Db
-     *
      * @throws ConfigurationException
      * @throws InvalidDatabaseException
      * @throws UnableToConnectException
      */
-
     public static function create(array $array): Db
     {
 
@@ -81,7 +79,7 @@ class DbFactory
              * @throws Bayfront\PDO\Exceptions\InvalidDatabaseException
              */
 
-            $db->add($pdo, $name); // Add all additional connections
+            $db->addConnection($pdo, $name); // Add all additional connections
 
         }
 

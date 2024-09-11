@@ -28,12 +28,11 @@
   "require": {
     "php": "^8.0",
     "bayfrontmedia/php-array-helpers": "^2.0",
-    "bayfrontmedia/php-string-helpers": "^2.0",
     "ext-pdo": "*"
   },
   "autoload": {
     "psr-4": {
-      "Bayfront\\PDO\\": "src/"
+      "Bayfront\\SimplePdo\\": "src/"
     }
   }
 }

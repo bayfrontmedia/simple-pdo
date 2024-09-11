@@ -1,31 +1,25 @@
-# Query builder
+# Documentation: Query builder
 
 Simple PDO includes a helpful query builder which you may choose to utilize.
 A query builder is useful to dynamically create queries, 
 such as for an API to create a query based on the URL query string.
 
 - [Usage](#usage)
+- [Public methods](#public-methods)
 - [Examples](#examples)
 
 ## Usage
 
 The query builder requires a `PDO` instance to be passed to the constructor.
+For more information on creating a `PDO` instance, [see PDO](pdo.md).
 
-**Example:**
+```php
+use Bayfront\SimplePdo\Query;
 
+$query = new Query($pdo); // $pdo as a PDO instance
 ```
-use Bayfront\PDO\Query;
 
-$pdo = new PDO(
-    'mysql:host=DB_HOST;dbname=DB_TO_USE',
-    'DB_USER',
-    'DB_USER_PASSWORD'
-);
-
-$query = new Query($pdo);
-``` 
-
-### Public methods
+## Public methods
 
 **Build query**
 
@@ -144,9 +138,9 @@ Add `RIGHT JOIN` clause to the query.
 
 Define column(s) to select.
 
-If the column type is `json`, keys from within the JSON string can be selected with the format of `{column}->{key}`.
-The field will be returned with the format of `{column}_{key}`.
-JSON fields which do not exist are treated as `null`.
+If the column type is `JSON`, keys from within the JSON string can be selected with the format of `COLUMN->KEY`.
+The field will be returned as a multidimensional array.
+JSON fields which do not exist are returned with a value of `null`.
 
 **Parameters:**
 
@@ -164,7 +158,7 @@ JSON fields which do not exist are treated as `null`.
 
 Adds a `WHERE` clause to the query.
 
-If the column type is `json`, keys from within the JSON string can be searched with the format of `{column}->{key}`.
+If the column type is `JSON`, keys from within the JSON string can be searched with the format of `COLUMN->KEY`.
 JSON fields which do not exist are treated as `null`.
 
 Available operators are:
@@ -185,12 +179,15 @@ Available operators are:
 - `!in` (not in)
 - `null` (is or is not `null`)
 
+The `OPERATOR_*` constants can be used for this purpose.
+
 The `in` and `!in` operators accept multiple comma-separated values.
 
 The `null` operator accepts two values: `true` and `false` for `is null` or `is not null`.
+The `VALUE_*` constants can be used for this purpose.
 
-> **NOTE:** Some native MySQL functions can be used as the `$value`, however they will be
-> injected into the query as strings, so they are vulnerable to SQL injection. 
+> **NOTE:** Some native MySQL functions can be used as the `$value`, however, they will be
+> injected into the query as strings, so they can be vulnerable to SQL injection. 
 
 **Parameters:**
 
@@ -204,7 +201,7 @@ The `null` operator accepts two values: `true` and `false` for `is null` or `is 
 
 **Throws:**
 
-- `Bayfront\PDO\Exceptions\QueryException`
+- `Bayfront\SimplePdo\Exceptions\QueryException`
 
 <hr />
 
@@ -217,7 +214,7 @@ Adds an `ORDER BY` clause.
 Values in the `$columns` array without a prefix or prefixed with a `+` will be ordered ascending.
 Values in the `$columns` array prefixed with a `-` will be ordered descending.
 
-If the column type is `json`, keys from within the JSON string can be ordered with the format of `{column}->{key}`.
+If the column type is `JSON`, keys from within the JSON string can be ordered with the format of `COLUMN->KEY`.
 JSON fields which do not exist are treated as `null`.
 
 **Parameters:**
@@ -315,6 +312,7 @@ Get a single row from a table, or `false` on failure.
 **Description:**
 
 Get a single column of a single row of a table, or `false` if not existing.
+If more than one field was defined by [select](#select), the first field will be returned.
 
 **Parameters:**
 
@@ -364,6 +362,8 @@ Returns last query parameters.
 
 Returns total number of rows found for the query without limit restrictions.
 
+NOTE: To get the number of rows affected by a `DELETE`, use the [Bayfront\SimplePdo\Db->rowCount()](README.md#rowcount) method.
+
 **Parameters:**
 
 - (None)
@@ -376,7 +376,7 @@ Returns total number of rows found for the query without limit restrictions.
 
 Select all records from `items` table:
 
-```
+```php
 $results = $query->table('items')
     ->select('*')
     ->get();
@@ -386,27 +386,32 @@ $results = $query->table('items')
 
 Select all records from `items` table where `price` is greater than `20.00`:
 
-```
+```php
+use Bayfront\SimplePdo\Query;
+
 $results = $query->table('items')
     ->select('*')
-    ->where('price', 'gt', '20.00')
+    ->where('price', Query::OPERATOR_GREATER_THAN, '20.00')
     ->get();
 ```
 
 <hr />
 
-Select `name`, `color`, `quantity` and `supplier->location` records from `items` table where `price` is greater than `20.00` and `supplier->name` starts with `a`:
+Select `name`, `color`, `quantity`, `supplier->location` and `supplier->email` as `supplier_email` records from `items` table where `price` is greater than `20.00` and `supplier->name` starts with `a`:
 
-```
+```php
+use Bayfront\SimplePdo\Query;
+
 $results = $query->table('items')
     ->select([
         'name',
         'color',
         'quantity',
-        'supplier->location'
+        'supplier->location',
+        'supplier->email AS supplier_email'
     ])
-    ->where('price', 'gt', '20.00')
-    ->where('supplier->name', 'sw', 'a')
+    ->where('price', Query::OPERATOR_GREATER_THAN, '20.00')
+    ->where('supplier->name', Query::OPERATOR_STARTS_WITH, 'a')
     ->get();
 ```
 
@@ -417,15 +422,17 @@ This example represents a column named `supplier` with type of `json`.
 Select up to 10 results for `name`, `color`, `quantity` from `items` table where `description` contains the word "fluffy", and the price is less than `50.00`, ordered by `name` descending.
 Also, get the total number of rows found for the query without limit restrictions.
 
-```
+```php
+use Bayfront\SimplePdo\Query;
+
 $results = $query->table('items')
     ->select([
         'name',
         'color',
         'quantity'
     ])
-    ->where('description', 'has', 'fluffy')
-    ->where('price', 'lt', '50.00')
+    ->where('description', Query::OPERATOR_HAS, 'fluffy')
+    ->where('price', Query::OPERATOR_LESS_THAN, '50.00')
     ->orderBy([
         '-name'
     ])
@@ -439,7 +446,9 @@ $total_count = $query->getTotalRows();
 
 Example using `LEFT JOIN`:
 
-```
+```php
+use Bayfront\SimplePdo\Query;
+
 $results = $query->table('items')
     ->leftJoin('vendors', 'items.vendor_id', 'vendors.id')
     ->select([
@@ -448,8 +457,8 @@ $results = $query->table('items')
         'items.color',
         'items.quantity'
     ])
-    ->where('items.description', 'has', 'fluffy')
-    ->where('items.price', 'lt', '50.00')
+    ->where('items.description', Query::OPERATOR_HAS, 'fluffy')
+    ->where('items.price', Query::OPERATOR_LESS_THAN, '50.00')
     ->orderBy([
         'vendors.name',
         '-items.name'

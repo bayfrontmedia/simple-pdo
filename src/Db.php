@@ -1,8 +1,8 @@
 <?php
 
-namespace Bayfront\PDO;
+namespace Bayfront\SimplePdo;
 
-use Bayfront\PDO\Exceptions\InvalidDatabaseException;
+use Bayfront\SimplePdo\Exceptions\InvalidDatabaseException;
 use PDO;
 use PDOStatement;
 
@@ -10,10 +10,10 @@ class Db
 {
 
     private static array $db_connections = []; // Db connections as PDO objects
-
     private string $default_db_name;
-
     private string $current_db_name;
+
+    public const DB_DEFAULT = 'default';
 
     /**
      * Constructor.
@@ -23,16 +23,11 @@ class Db
      * @param PDO $pdo
      * @param string $db_name
      */
-
-    public function __construct(PDO $pdo, string $db_name = 'default')
+    public function __construct(PDO $pdo, string $db_name = self::DB_DEFAULT)
     {
-
         self::$db_connections[$db_name] = $pdo;
-
         $this->default_db_name = $db_name;
-
         $this->current_db_name = $db_name;
-
     }
 
     public function __destruct()
@@ -45,18 +40,12 @@ class Db
      *
      * @return void
      */
-
     private function disconnectAll(): void
     {
-
         foreach (self::$db_connections as $k => $connection) {
-
             self::$db_connections[$k] = NULL;
-
             unset(self::$db_connections[$k]);
-
         }
-
     }
 
     /**
@@ -64,22 +53,17 @@ class Db
      *
      * @return PDO
      */
-
-    private function getConnection(): PDO
+    private function getCurrentConnectionAndReset(): PDO
     {
-
         $current = self::$db_connections[$this->current_db_name];
-
         $this->current_db_name = $this->default_db_name; // Reset current connection to default
-
         return $current;
-
     }
 
     /*
-     * ############################################################
-     * Database connections
-     * ############################################################
+     * |--------------------------------------------------------------------------
+     * | Database connections
+     * |--------------------------------------------------------------------------
      */
 
     /**
@@ -87,33 +71,26 @@ class Db
      *
      * @param PDO $pdo
      * @param string $db_name (Name must be unique)
-     * @param bool $make_current
-     * @param bool $make_default
+     * @param bool $make_current (Use this connection for the next query only)
+     * @param bool $make_default (Use this connection for each subsequent query)
      * @return self
      * @throws InvalidDatabaseException
      */
-
-    public function add(PDO $pdo, string $db_name, bool $make_current = false, bool $make_default = false): self
+    public function addConnection(PDO $pdo, string $db_name, bool $make_current = false, bool $make_default = false): self
     {
 
         if (isset(self::$db_connections[$db_name])) {
-
             throw new InvalidDatabaseException('Database name already used');
-
         }
 
         self::$db_connections[$db_name] = $pdo;
 
         if (true === $make_current) {
-
             $this->current_db_name = $db_name;
-
         }
 
         if (true === $make_default) {
-
             $this->default_db_name = $db_name;
-
         }
 
         return $this;
@@ -121,8 +98,7 @@ class Db
     }
 
     /**
-     * Set given database name as current.
-     *
+     * Set given database name as current for the next query only.
      * After the next query, the current database will automatically revert to the default database.
      *
      * @param string $db_name
@@ -130,20 +106,15 @@ class Db
      * @return self
      * @throws InvalidDatabaseException
      */
-
-    public function use(string $db_name, bool $make_default = false): self
+    public function useConnection(string $db_name, bool $make_default = false): self
     {
 
         if (!isset(self::$db_connections[$db_name])) {
-
             throw new InvalidDatabaseException('Database is not defined');
-
         }
 
         if (true === $make_default) {
-
             $this->default_db_name = $db_name;
-
         }
 
         $this->current_db_name = $db_name;
@@ -159,8 +130,7 @@ class Db
      * @return PDO
      * @throws InvalidDatabaseException
      */
-
-    public function get(string $db_name = ''): PDO
+    public function getConnection(string $db_name = ''): PDO
     {
 
         if ($db_name == '') {
@@ -168,9 +138,7 @@ class Db
         }
 
         if (isset(self::$db_connections[$db_name])) {
-
             return self::$db_connections[$db_name];
-
         }
 
         throw new InvalidDatabaseException('Database is not defined');
@@ -178,12 +146,21 @@ class Db
     }
 
     /**
+     * Returns the raw PDO instance of the current database.
+     *
+     * @return PDO
+     */
+    public function getCurrentConnection(): PDO
+    {
+        return self::$db_connections[$this->current_db_name];
+    }
+
+    /**
      * Returns name of the default database.
      *
      * @return string
      */
-
-    public function getDefault(): string
+    public function getDefaultConnectionName(): string
     {
         return $this->default_db_name;
     }
@@ -193,8 +170,7 @@ class Db
      *
      * @return string
      */
-
-    public function getCurrent(): string
+    public function getCurrentConnectionName(): string
     {
         return $this->current_db_name;
     }
@@ -204,38 +180,32 @@ class Db
      *
      * @return array
      */
-
-    public function getConnections(): array
+    public function getConnectionNames(): array
     {
         return array_keys(self::$db_connections);
     }
 
     /**
-     * Checks if connected to a given database name.
+     * Checks if a database connection exists with a given name.
      *
      * @param string $db_name
      * @return bool
      */
-
-    public function isConnected(string $db_name): bool
+    public function connectionExists(string $db_name): bool
     {
         return isset(self::$db_connections[$db_name]);
     }
 
     /*
-     * ############################################################
-     * Queries
-     * ############################################################
+     * |--------------------------------------------------------------------------
+     * | Queries
+     * |--------------------------------------------------------------------------
      */
 
     private mixed $query_start; // Microtime for query start
-
     private mixed $stmt = NULL; // PDOStatement object
-
     private string $raw_query = ''; // Last raw query
-
     private array $parameters = [];
-
     private array $query_durations = []; // Records duration to execute each query
 
     /**
@@ -243,16 +213,11 @@ class Db
      *
      * @return void
      */
-
     private function beginQuery(): void
     {
-
         $this->query_start = microtime(true);
-
         $this->stmt = NULL;
-
         $this->raw_query = '';
-
     }
 
     /**
@@ -261,10 +226,9 @@ class Db
      * @param string $query
      * @return PDOStatement
      */
-
     private function prepare(string $query): PDOStatement
     {
-        return $this->getConnection()->prepare($query); // PDOStatement object
+        return $this->getCurrentConnectionAndReset()->prepare($query); // PDOStatement object
     }
 
     /**
@@ -272,10 +236,8 @@ class Db
      * and sets the most applicable data type for the parameter.
      *
      * @param array $params
-     *
      * @return void
      */
-
     private function bindParams(array $params): void
     {
 
@@ -319,7 +281,6 @@ class Db
      * @param array $params
      * @return bool
      */
-
     public function query(string $query, array $params = []): bool
     {
 
@@ -347,7 +308,6 @@ class Db
      * @param bool $return_array (When false, the result set will be returned as an object)
      * @return mixed
      */
-
     public function select(string $query, array $params = [], bool $return_array = true): mixed
     {
 
@@ -369,7 +329,6 @@ class Db
      * @param bool $return_array (When false, the result set will be returned as an object)
      * @return mixed
      */
-
     public function row(string $query, array $params = [], bool $return_array = true): mixed
     {
 
@@ -390,7 +349,6 @@ class Db
      * @param array $params
      * @return mixed
      */
-
     public function single(string $query, array $params = []): mixed
     {
         $this->query($query, $params);
@@ -405,7 +363,6 @@ class Db
      * @param bool $overwrite (Overwrite preexisting values if they exist)
      * @return bool
      */
-
     public function insert(string $table, array $values, bool $overwrite = true): bool
     {
 
@@ -463,7 +420,6 @@ class Db
      * @param array $conditions (Where key = value)
      * @return bool
      */
-
     public function update(string $table, array $values, array $conditions): bool
     {
 
@@ -527,7 +483,6 @@ class Db
      * @return bool
      * @noinspection DuplicatedCode
      */
-
     public function delete(string $table, array $conditions): bool
     {
 
@@ -580,7 +535,6 @@ class Db
      *
      * @noinspection DuplicatedCode
      */
-
     public function count(string $table, array $conditions = []): int
     {
 
@@ -630,7 +584,6 @@ class Db
      * @return bool
      *
      */
-
     public function exists(string $table, array $conditions = []): bool
     {
 
@@ -651,7 +604,6 @@ class Db
      * @return int
      * @noinspection DuplicatedCode
      */
-
     public function sum(string $table, string $column, array $conditions = []): int
     {
 
@@ -701,7 +653,6 @@ class Db
      *
      * @return bool
      */
-
     public function beginTransaction(): bool
     {
         return self::$db_connections[$this->current_db_name]->beginTransaction();
@@ -712,7 +663,6 @@ class Db
      *
      * @return bool
      */
-
     public function commitTransaction(): bool
     {
         return self::$db_connections[$this->current_db_name]->commit();
@@ -724,16 +674,15 @@ class Db
      *
      * @return bool
      */
-
     public function rollbackTransaction(): bool
     {
         return self::$db_connections[$this->current_db_name]->rollback();
     }
 
     /*
-     * ############################################################
-     * Query information
-     * ############################################################
+     * |--------------------------------------------------------------------------
+     * | Query information
+     * |--------------------------------------------------------------------------
      */
 
     /**
@@ -741,7 +690,6 @@ class Db
      *
      * @return string
      */
-
     public function getLastQuery(): string
     {
         return $this->raw_query;
@@ -762,7 +710,6 @@ class Db
      *
      * @return int
      */
-
     public function rowCount(): int
     {
 
@@ -779,7 +726,6 @@ class Db
      *
      * @return string
      */
-
     public function lastInsertId(): string
     {
         return self::$db_connections[$this->current_db_name]->lastInsertId();
@@ -789,10 +735,8 @@ class Db
      * Returns the total time elapsed in seconds for all queries executed for the current database.
      *
      * @param int $decimals (Number of decimal points to return)
-     *
      * @return float
      */
-
     public function getQueryTime(int $decimals = 3): float
     {
 
@@ -808,7 +752,6 @@ class Db
      *
      * @return int
      */
-
     public function getTotalQueries(): int
     {
 

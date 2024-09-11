@@ -1,10 +1,9 @@
 <?php
 
-namespace Bayfront\PDO;
+namespace Bayfront\SimplePdo;
 
 use Bayfront\ArrayHelpers\Arr;
-use Bayfront\PDO\Exceptions\QueryException;
-use Bayfront\StringHelpers\Str;
+use Bayfront\SimplePdo\Exceptions\QueryException;
 use PDO;
 
 class Query
@@ -12,41 +11,42 @@ class Query
 
     protected PDO $pdo; // Instance
 
-    /*
-     * Possible $query keys include:
-     *  - from
-     *  - distinct
-     *  - inner_join
-     *  - left_join
-     *  - right_join
-     *  - columns
-     *  - where
-     *  - sort
-     *  - limit
-     *  - offset
-     */
-
-    protected array $query = [];
-
-    protected array $placeholders = [];
-
     public function __construct(PDO $pdo)
     {
-
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); // Throw exceptions
-
         $this->pdo = $pdo;
     }
+
+    /*
+     * $query array keys
+     */
+    private const QUERY_FROM = 'from';
+    private const QUERY_DISTINCT = 'distinct';
+    private const QUERY_INNER_JOIN = 'inner_join';
+    private const QUERY_LEFT_JOIN = 'left_join';
+    private const QUERY_RIGHT_JOIN = 'right_join';
+    private const QUERY_COLUMNS = 'columns';
+    private const QUERY_WHERE = 'where';
+    private const QUERY_SORT = 'sort';
+    private const QUERY_LIMIT = 'limit';
+    private const QUERY_OFFSET = 'offset';
+
+    private array $query = [];
+
+    private array $placeholders = [];
+
+    private string $table = '';
 
     /**
      * Define the table to query.
      * @param string $table
      * @return self
      */
-
     public function table(string $table): self
     {
-        $this->query['from'] = ' FROM ' . $table;
+        $this->query[self::QUERY_FROM] = ' FROM ' . $table;
+
+        $this->table = $table;
 
         return $this;
     }
@@ -56,11 +56,9 @@ class Query
      *
      * @return self
      */
-
     public function distinct(): self
     {
-        $this->query['distinct'] = 'DISTINCT ';
-
+        $this->query[self::QUERY_DISTINCT] = 'DISTINCT ';
         return $this;
     }
 
@@ -72,14 +70,10 @@ class Query
      * @param string $col2
      * @return self
      */
-
     public function innerJoin(string $table, string $col1, string $col2): self
     {
-
-        $this->query['inner_join'] = ' INNER JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
-
+        $this->query[self::QUERY_INNER_JOIN][] = ' INNER JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
         return $this;
-
     }
 
     /**
@@ -90,14 +84,10 @@ class Query
      * @param string $col2
      * @return self
      */
-
     public function leftJoin(string $table, string $col1, string $col2): self
     {
-
-        $this->query['left_join'] = ' LEFT JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
-
+        $this->query[self::QUERY_LEFT_JOIN][] = ' LEFT JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
         return $this;
-
     }
 
     /**
@@ -108,42 +98,46 @@ class Query
      * @param string $col2
      * @return self
      */
-
     public function rightJoin(string $table, string $col1, string $col2): self
     {
-
-        $this->query['right_join'] = ' RIGHT JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
-
+        $this->query[self::QUERY_RIGHT_JOIN][] = ' RIGHT JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
         return $this;
-
     }
 
     /**
      * Define column(s) to select.
      *
-     * If the column type is json, keys from within the JSON string can be selected with the format of {column}->{key}.
-     * The field will be returned with the format of {column}_{key}.
-     *
-     * JSON fields which do not exist are treated as null.
+     * If the column type is JSON, keys from within the JSON string can be selected with the format of COLUMN->KEY.
+     * The field will be returned as a multidimensional array.
+     * JSON fields which do not exist are returned with a value of null.
      *
      * @param array|string $columns
      * @return self
      */
-
     public function select(array|string $columns): self
     {
 
         foreach ((array)$columns as $column) {
 
+            if (!str_contains($column, '.') && $this->table !== '') { // Support for joins
+                $column = $this->table . '.' . $column;
+            }
+
             if (str_contains($column, '->')) { // JSON
 
-                $json = explode('->', $column, 2);
+                $column_parts = explode(' ', $column, 2); // Allow for spaces, such as with "... AS x"
 
-                $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "' as " . $json[0] . '_' . str_replace('->', '_', $json[1]);
+                $json = explode('->', $column_parts[0], 2);
+
+                $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "'";
+
+                if (isset($column_parts[1])) {
+                    $column = $column . " " . $column_parts[1];
+                }
 
             }
 
-            $this->query['columns'][] = $column;
+            $this->query[self::QUERY_COLUMNS][] = $column;
 
         }
 
@@ -157,7 +151,7 @@ class Query
      * @param string $value
      * @return bool
      */
-    protected function is_function(string $value): bool
+    private function is_function(string $value): bool
     {
 
         // See: https://dev.mysql.com/doc/refman/8.0/en/built-in-function-reference.html
@@ -228,9 +222,55 @@ class Query
     }
 
     /**
+     * Parse column.
+     *
+     * @param string $column
+     * @return string
+     */
+    private function parseConditionColumn(string $column): string
+    {
+
+        if (!str_contains($column, '.') && $this->table !== '') { // Support for joins
+            $column = $this->table . '.' . $column;
+        }
+
+        if (str_contains($column, '->')) { // JSON
+
+            $json = explode('->', $column, 2);
+            $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "'";
+
+        }
+
+        return $column;
+
+    }
+
+    /*
+     * Operators
+     */
+    public const OPERATOR_EQUALS = 'eq';
+    public const OPERATOR_DOES_NOT_EQUAL = '!eq';
+    public const OPERATOR_LESS_THAN = 'lt';
+    public const OPERATOR_GREATER_THAN = 'gt';
+    public const OPERATOR_LESS_THAN_OR_EQUAL = 'le';
+    public const OPERATOR_GREATER_THAN_OR_EQUAL = 'ge';
+    public const OPERATOR_STARTS_WITH = 'sw';
+    public const OPERATOR_DOES_NOT_START_WITH = '!sw';
+    public const OPERATOR_ENDS_WITH = 'ew';
+    public const OPERATOR_DOES_NOT_END_WITH = '!ew';
+    public const OPERATOR_HAS = 'has';
+    public const OPERATOR_DOES_NOT_HAVE = '!has';
+    public const OPERATOR_IN = 'in';
+    public const OPERATOR_NOT_IN = '!in';
+    public const OPERATOR_NULL = 'null';
+
+    public const VALUE_TRUE = 'true';
+    public const VALUE_FALSE = 'false';
+
+    /**
      * Adds a WHERE clause to the query.
      *
-     * If the column type is json, keys from within the JSON string can be searched with the format of {column}->{key}.
+     * If the column type is JSON, keys from within the JSON string can be searched with the format of COLUMN->KEY.
      * JSON fields which do not exist are treated as null.
      *
      * Available operators are:
@@ -251,7 +291,15 @@ class Query
      * - !in (not in)
      * - null (is or is not null)
      *
+     * The OPERATOR_* constants can be used for this purpose.
+     *
+     * The in and !in operators accept multiple comma-separated values.
+     *
      * The "null" operator accepts two values: true and false for is null or is not null.
+     * The VALUE_* constants can be used for this purpose.
+     *
+     * NOTE: Some native MySQL functions can be used as the $value, however, they will be
+     * injected into the query as strings, so they can be vulnerable to SQL injection.
      *
      * @param string $column
      * @param string $operator
@@ -259,43 +307,42 @@ class Query
      * @return self
      * @throws QueryException
      */
-
     public function where(string $column, string $operator, mixed $value): self
     {
 
-        if (!isset($this->query['where'])) {
-            $this->query['where'] = ' WHERE ';
+        if (!isset($this->query[self::QUERY_WHERE])) {
+            $this->query[self::QUERY_WHERE] = ' WHERE ';
         } else {
-            $this->query['where'] .= ' AND ';
+            $this->query[self::QUERY_WHERE] .= ' AND ';
         }
 
         if (!in_array($operator, [
-            'eq',
-            '!eq',
-            'lt',
-            'gt',
-            'le',
-            'ge',
-            'sw',
-            '!sw',
-            'ew',
-            '!ew',
-            'has',
-            '!has',
-            'in',
-            '!in',
-            'null'
+            self::OPERATOR_EQUALS,
+            self::OPERATOR_DOES_NOT_EQUAL,
+            self::OPERATOR_LESS_THAN,
+            self::OPERATOR_GREATER_THAN,
+            self::OPERATOR_LESS_THAN_OR_EQUAL,
+            self::OPERATOR_GREATER_THAN_OR_EQUAL,
+            self::OPERATOR_STARTS_WITH,
+            self::OPERATOR_DOES_NOT_START_WITH,
+            self::OPERATOR_ENDS_WITH,
+            self::OPERATOR_DOES_NOT_END_WITH,
+            self::OPERATOR_HAS,
+            self::OPERATOR_DOES_NOT_HAVE,
+            self::OPERATOR_IN,
+            self::OPERATOR_NOT_IN,
+            self::OPERATOR_NULL
         ])) {
             throw new QueryException('Unable to build query: invalid operator (' . $operator . ') for column (' . $column . ')');
         }
 
         $operator = str_replace([
-            'eq',
-            '!eq',
-            'lt',
-            'gt',
-            'le',
-            'ge'
+            self::OPERATOR_EQUALS,
+            self::OPERATOR_DOES_NOT_EQUAL,
+            self::OPERATOR_LESS_THAN,
+            self::OPERATOR_GREATER_THAN,
+            self::OPERATOR_LESS_THAN_OR_EQUAL,
+            self::OPERATOR_GREATER_THAN_OR_EQUAL
         ], [
             '=',
             '!=',
@@ -305,88 +352,82 @@ class Query
             '>='
         ], $operator);
 
-        if (str_contains($column, '->')) { // JSON
-
-            $json = explode('->', $column, 2);
-
-            $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "'";
-
-        }
+        $column = $this->parseConditionColumn($column);
 
         // Check operators
 
         switch ($operator) {
 
-            case 'sw':
+            case self::OPERATOR_STARTS_WITH:
 
                 if ($this->is_function($value)) {
-                    $this->query['where'] .= $column . ' LIKE ' . $value;
+                    $this->query[self::QUERY_WHERE] .= $column . ' LIKE ' . $value;
                     break;
                 }
 
                 $this->placeholders[] = $value . '%';
-                $this->query['where'] .= $column . ' LIKE ?';
+                $this->query[self::QUERY_WHERE] .= $column . ' LIKE ?';
                 break;
 
-            case '!sw':
+            case self::OPERATOR_DOES_NOT_START_WITH:
 
                 if ($this->is_function($value)) {
-                    $this->query['where'] .= $column . ' NOT LIKE ' . $value;
+                    $this->query[self::QUERY_WHERE] .= $column . ' NOT LIKE ' . $value;
                     break;
                 }
 
                 $this->placeholders[] = $value . '%';
-                $this->query['where'] .= $column . ' NOT LIKE ?';
+                $this->query[self::QUERY_WHERE] .= $column . ' NOT LIKE ?';
                 break;
 
-            case 'ew':
+            case self::OPERATOR_ENDS_WITH:
 
                 if ($this->is_function($value)) {
-                    $this->query['where'] .= $column . ' LIKE ' . $value;
+                    $this->query[self::QUERY_WHERE] .= $column . ' LIKE ' . $value;
                     break;
                 }
 
                 $this->placeholders[] = '%' . $value;
-                $this->query['where'] .= $column . ' LIKE ?';
+                $this->query[self::QUERY_WHERE] .= $column . ' LIKE ?';
                 break;
 
-            case '!ew':
+            case self::OPERATOR_DOES_NOT_END_WITH:
 
                 if ($this->is_function($value)) {
-                    $this->query['where'] .= $column . ' NOT LIKE ' . $value;
+                    $this->query[self::QUERY_WHERE] .= $column . ' NOT LIKE ' . $value;
                     break;
                 }
 
                 $this->placeholders[] = '%' . $value;
-                $this->query['where'] .= $column . ' NOT LIKE ?';
+                $this->query[self::QUERY_WHERE] .= $column . ' NOT LIKE ?';
                 break;
 
-            case 'has':
+            case self::OPERATOR_HAS:
 
                 if ($this->is_function($value)) {
-                    $this->query['where'] .= $column . ' LIKE ' . $value;
+                    $this->query[self::QUERY_WHERE] .= $column . ' LIKE ' . $value;
                     break;
                 }
 
                 $this->placeholders[] = '%' . $value . '%';
-                $this->query['where'] .= $column . ' LIKE ?';
+                $this->query[self::QUERY_WHERE] .= $column . ' LIKE ?';
                 break;
 
-            case '!has':
+            case self::OPERATOR_DOES_NOT_HAVE:
 
                 if ($this->is_function($value)) {
-                    $this->query['where'] .= $column . ' NOT LIKE ' . $value;
+                    $this->query[self::QUERY_WHERE] .= $column . ' NOT LIKE ' . $value;
                     break;
                 }
 
                 $this->placeholders[] = '%' . $value . '%';
-                $this->query['where'] .= $column . ' NOT LIKE ?';
+                $this->query[self::QUERY_WHERE] .= $column . ' NOT LIKE ?';
                 break;
 
-            case 'in':
+            case self::OPERATOR_IN:
 
                 if ($this->is_function($value)) {
-                    $this->query['where'] .= $column . ' IN (' . $value . ')';
+                    $this->query[self::QUERY_WHERE] .= $column . ' IN (' . $value . ')';
                     break;
                 }
 
@@ -400,14 +441,14 @@ class Query
 
                 }
 
-                $this->query['where'] .= $column . ' IN (' . $in . ')';
+                $this->query[self::QUERY_WHERE] .= $column . ' IN (' . $in . ')';
 
                 break;
 
-            case '!in':
+            case self::OPERATOR_NOT_IN:
 
                 if ($this->is_function($value)) {
-                    $this->query['where'] .= $column . ' NOT IN (' . $value . ')';
+                    $this->query[self::QUERY_WHERE] .= $column . ' NOT IN (' . $value . ')';
                     break;
                 }
 
@@ -421,23 +462,23 @@ class Query
 
                 }
 
-                $this->query['where'] .= $column . ' NOT IN (' . $in . ')';
+                $this->query[self::QUERY_WHERE] .= $column . ' NOT IN (' . $in . ')';
 
                 break;
 
-            case 'null':
+            case self::OPERATOR_NULL:
 
-                if ($value == 'true') {
+                if ($value == self::VALUE_TRUE) {
 
-                    $this->query['where'] .= $column . ' IS NULL';
+                    $this->query[self::QUERY_WHERE] .= $column . ' IS NULL';
 
-                } else if ($value == 'false') {
+                } else if ($value == self::VALUE_FALSE) {
 
-                    $this->query['where'] .= $column . ' IS NOT NULL';
+                    $this->query[self::QUERY_WHERE] .= $column . ' IS NOT NULL';
 
                 } else {
 
-                    throw new QueryException('Unable to build query: invalid value (' . $value . ') for operator (null)');
+                    throw new QueryException('Unable to build query: invalid value (' . $value . ') for operator (' . self::OPERATOR_NULL . ')');
 
                 }
 
@@ -447,16 +488,16 @@ class Query
 
                 if ($value == '') { // Empty string needs no placeholder
 
-                    $this->query['where'] .= $column . " " . $operator . " ''";
+                    $this->query[self::QUERY_WHERE] .= $column . " " . $operator . " ''";
 
                 } else if ($this->is_function($value)) {
 
-                    $this->query['where'] .= $column . ' ' . $operator . ' ' . $value;
+                    $this->query[self::QUERY_WHERE] .= $column . ' ' . $operator . ' ' . $value;
 
                 } else {
 
                     $this->placeholders[] = $value;
-                    $this->query['where'] .= $column . ' ' . $operator . ' ?';
+                    $this->query[self::QUERY_WHERE] .= $column . ' ' . $operator . ' ?';
 
                 }
 
@@ -472,13 +513,12 @@ class Query
      * Values in the $columns array without a prefix or prefixed with a "+" will be ordered ascending.
      * Values in the $columns array prefixed with a "-" will be ordered descending.
      *
-     * If the column type is json, keys from within the JSON string can be ordered with the format of {column}->{key}.
+     * If the column type is JSON, keys from within the JSON string can be ordered with the format of COLUMN->KEY.
      * JSON fields which do not exist are treated as null.
      *
      * @param array $columns
      * @return self
      */
-
     public function orderBy(array $columns): self
     {
 
@@ -490,16 +530,11 @@ class Query
 
         foreach ($columns as $column) {
 
-            if (Str::startsWith($column, '-')) {
+            if (str_starts_with($column, '-')) {
 
                 $column = ltrim($column, '-');
 
-                if (str_contains($column, '->')) { // JSON
-
-                    $json = explode('->', $column, 2);
-                    $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "'";
-
-                }
+                $column = $this->parseConditionColumn($column);
 
                 $string .= $column . ' DESC, ';
 
@@ -512,12 +547,7 @@ class Query
 
                 $column = ltrim(ltrim($column, '+'), ' ');
 
-                if (str_contains($column, '->')) { // JSON
-
-                    $json = explode('->', $column, 2);
-                    $column = $json[0] . "->>'$." . str_replace('->', '.', $json[1]) . "'";
-
-                }
+                $column = $this->parseConditionColumn($column);
 
                 $string .= $column . ' ASC, ';
 
@@ -525,7 +555,7 @@ class Query
 
         }
 
-        $this->query['sort'] = rtrim($string, ', ');
+        $this->query[self::QUERY_SORT] = rtrim($string, ', ');
 
         return $this;
 
@@ -536,14 +566,10 @@ class Query
      *
      * @return self
      */
-
     public function orderByRand(): self
     {
-
-        $this->query['sort'] = ' ORDER BY RAND()';
-
+        $this->query[self::QUERY_SORT] = ' ORDER BY RAND()';
         return $this;
-
     }
 
     /**
@@ -552,14 +578,10 @@ class Query
      * @param int $limit
      * @return self
      */
-
     public function limit(int $limit): self
     {
-
-        $this->query['limit'] = ' LIMIT ' . $limit;
-
+        $this->query[self::QUERY_LIMIT] = ' LIMIT ' . $limit;
         return $this;
-
     }
 
     /**
@@ -568,14 +590,10 @@ class Query
      * @param int $offset
      * @return self
      */
-
     public function offset(int $offset): self
     {
-
-        $this->query['offset'] = ' OFFSET ' . $offset;
-
+        $this->query[self::QUERY_OFFSET] = ' OFFSET ' . $offset;
         return $this;
-
     }
 
     /**
@@ -583,20 +601,46 @@ class Query
      *
      * @return string
      */
-
     protected function getQuery(): string
     {
 
-        return 'SELECT ' . Arr::get($this->query, 'distinct', '')
-            . implode(', ', Arr::get($this->query, 'columns', []))
-            . Arr::get($this->query, 'from', '')
-            . Arr::get($this->query, 'inner_join', '')
-            . Arr::get($this->query, 'left_join', '')
-            . Arr::get($this->query, 'right_join', '')
-            . Arr::get($this->query, 'where', '')
-            . Arr::get($this->query, 'sort', '')
-            . Arr::get($this->query, 'limit', '')
-            . Arr::get($this->query, 'offset', '');
+        return 'SELECT ' . Arr::get($this->query, self::QUERY_DISTINCT, '')
+            . implode(', ', Arr::get($this->query, self::QUERY_COLUMNS, []))
+            . Arr::get($this->query, self::QUERY_FROM, '')
+            . implode('', Arr::get($this->query, self::QUERY_INNER_JOIN, []))
+            . implode('', Arr::get($this->query, self::QUERY_LEFT_JOIN, []))
+            . implode('', Arr::get($this->query, self::QUERY_RIGHT_JOIN, []))
+            . Arr::get($this->query, self::QUERY_WHERE, '')
+            . Arr::get($this->query, self::QUERY_SORT, '')
+            . Arr::get($this->query, self::QUERY_LIMIT, '')
+            . Arr::get($this->query, self::QUERY_OFFSET, '');
+
+    }
+
+    /**
+     * Format the result of a query.
+     *
+     * @param array $result
+     * @return array
+     */
+    private function formatResult(array $result): array
+    {
+
+        foreach ($result as $k => $v) {
+
+            if (str_contains($k, "->>'$.")) { // JSON
+
+                $arr = explode("->>'$.", rtrim($k, "'"), 2);
+                $col = $arr[0];
+
+                Arr::set($result, $col . '.' . $arr[1], $v);
+                unset($result[$k]);
+
+            }
+
+        }
+
+        return $result;
 
     }
 
@@ -605,14 +649,24 @@ class Query
      *
      * @return array
      */
-
     public function get(): array
     {
         $stmt = $this->pdo->prepare($this->getQuery());
 
         $stmt->execute($this->placeholders);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (is_array($result)) {
+
+            foreach ($result as $k => $v) {
+                $result[$k] = $this->formatResult($v);
+            }
+
+        }
+
+        return $result;
+
     }
 
     /**
@@ -620,14 +674,20 @@ class Query
      *
      * @return mixed
      */
-
     public function row(): mixed
     {
         $stmt = $this->pdo->prepare($this->getQuery());
 
         $stmt->execute($this->placeholders);
 
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (is_array($result)) {
+            return $this->formatResult($result);
+        }
+
+        return $result;
+
     }
 
     /**
@@ -635,7 +695,6 @@ class Query
      *
      * @return mixed
      */
-
     public function single(): mixed
     {
         $stmt = $this->pdo->prepare($this->getQuery());
@@ -650,7 +709,6 @@ class Query
      *
      * @return string
      */
-
     public function getLastQuery(): string
     {
         return $this->getQuery();
@@ -661,7 +719,6 @@ class Query
      *
      * @return array
      */
-
     public function getLastParameters(): array
     {
         return $this->placeholders;
@@ -670,19 +727,18 @@ class Query
     /**
      * Returns total number of rows found for the query without limit restrictions.
      *
-     * NOTE: To get the number of rows affected by a DELETE, use the Bayfront\PDO\Db->rowCount() method.
+     * NOTE: To get the number of rows affected by a DELETE, use the Bayfront\SimplePdo\Db->rowCount() method.
      *
      * @return int
      */
-
     public function getTotalRows(): int
     {
         $query = 'SELECT COUNT(*)'
-            . Arr::get($this->query, 'from', '')
-            . Arr::get($this->query, 'inner_join', '')
-            . Arr::get($this->query, 'left_join', '')
-            . Arr::get($this->query, 'right_join', '')
-            . Arr::get($this->query, 'where', '');
+            . Arr::get($this->query, self::QUERY_FROM, '')
+            . implode('', Arr::get($this->query, self::QUERY_INNER_JOIN, []))
+            . implode('', Arr::get($this->query, self::QUERY_LEFT_JOIN, []))
+            . implode('', Arr::get($this->query, self::QUERY_RIGHT_JOIN, []))
+            . Arr::get($this->query, self::QUERY_WHERE, '');
 
         $stmt = $this->pdo->prepare($query);
 

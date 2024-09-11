@@ -12,6 +12,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities
 
+## [4.0.0] - 2024.09.10
+
+### Added
+
+- Added `DB_DEFAULT` constant.
+- Added `getCurrentConnection` method.
+- Added constants to be used with the query builder.
+- Added support for multiple `INNER`, `LEFT` and `RIGHT` joins with the query builder.
+
+### Changed
+
+- Renamed `add` method to `addConnection`.
+- Renamed `use` method to `useConnection`.
+- Renamed `get` method to `getConnection`.
+- Renamed `getDefault` method to `getDefaultConnectionName`.
+- Renamed `getCurrent` method to `getCurrentConnectionName`.
+- Renamed `getConnections` method to `getConnectionNames`.
+- Renamed `isConnected` method to `connectionExists`.
+- Changed namespace from `Bayfront\PDO` to `Bayfront\SimplePdo`
+- Updated documentation.
+
+### Removed
+
+- Removed need for `php-string-helpers` dependency.
+
 ## [3.0.0] - 2023.05.10
 
 ### Added

@@ -1,6 +1,6 @@
 <?php
 
-namespace Bayfront\PDO\Exceptions;
+namespace Bayfront\SimplePdo\Exceptions;
 
 class UnableToConnectException extends SimplePDOException
 {
