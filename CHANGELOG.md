@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `DB_DEFAULT` constant.
 - Added `getCurrentConnection` method.
 - Added constants to be used with the query builder.
+- Added support for multiple `INNER`, `LEFT` and `RIGHT` joins with the query builder.
 
 ### Changed
 

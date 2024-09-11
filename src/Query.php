@@ -72,7 +72,7 @@ class Query
      */
     public function innerJoin(string $table, string $col1, string $col2): self
     {
-        $this->query[self::QUERY_INNER_JOIN] = ' INNER JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
+        $this->query[self::QUERY_INNER_JOIN][] = ' INNER JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
         return $this;
     }
 
@@ -86,7 +86,7 @@ class Query
      */
     public function leftJoin(string $table, string $col1, string $col2): self
     {
-        $this->query[self::QUERY_LEFT_JOIN] = ' LEFT JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
+        $this->query[self::QUERY_LEFT_JOIN][] = ' LEFT JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
         return $this;
     }
 
@@ -100,7 +100,7 @@ class Query
      */
     public function rightJoin(string $table, string $col1, string $col2): self
     {
-        $this->query[self::QUERY_RIGHT_JOIN] = ' RIGHT JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
+        $this->query[self::QUERY_RIGHT_JOIN][] = ' RIGHT JOIN ' . $table . ' ON ' . $col1 . ' = ' . $col2;
         return $this;
     }
 
@@ -607,9 +607,9 @@ class Query
         return 'SELECT ' . Arr::get($this->query, self::QUERY_DISTINCT, '')
             . implode(', ', Arr::get($this->query, self::QUERY_COLUMNS, []))
             . Arr::get($this->query, self::QUERY_FROM, '')
-            . Arr::get($this->query, self::QUERY_INNER_JOIN, '')
-            . Arr::get($this->query, self::QUERY_LEFT_JOIN, '')
-            . Arr::get($this->query, self::QUERY_RIGHT_JOIN, '')
+            . implode('', Arr::get($this->query, self::QUERY_INNER_JOIN, []))
+            . implode('', Arr::get($this->query, self::QUERY_LEFT_JOIN, []))
+            . implode('', Arr::get($this->query, self::QUERY_RIGHT_JOIN, []))
             . Arr::get($this->query, self::QUERY_WHERE, '')
             . Arr::get($this->query, self::QUERY_SORT, '')
             . Arr::get($this->query, self::QUERY_LIMIT, '')
@@ -735,9 +735,9 @@ class Query
     {
         $query = 'SELECT COUNT(*)'
             . Arr::get($this->query, self::QUERY_FROM, '')
-            . Arr::get($this->query, self::QUERY_INNER_JOIN, '')
-            . Arr::get($this->query, self::QUERY_LEFT_JOIN, '')
-            . Arr::get($this->query, self::QUERY_RIGHT_JOIN, '')
+            . implode('', Arr::get($this->query, self::QUERY_INNER_JOIN, []))
+            . implode('', Arr::get($this->query, self::QUERY_LEFT_JOIN, []))
+            . implode('', Arr::get($this->query, self::QUERY_RIGHT_JOIN, []))
             . Arr::get($this->query, self::QUERY_WHERE, '');
 
         $stmt = $this->pdo->prepare($query);
