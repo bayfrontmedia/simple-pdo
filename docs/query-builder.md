@@ -1,4 +1,4 @@
-# Documentation > Query builder
+# Documentation: Query builder
 
 Simple PDO includes a helpful query builder which you may choose to utilize.
 A query builder is useful to dynamically create queries, 
@@ -10,6 +10,7 @@ such as for an API to create a query based on the URL query string.
 ## Usage
 
 The query builder requires a `PDO` instance to be passed to the constructor.
+For more information on creating a `PDO` instance, see [getting started](getting-started.md#create-a-pdo-instance).
 
 **Example:**
 

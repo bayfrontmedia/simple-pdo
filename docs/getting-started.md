@@ -1,64 +1,13 @@
-# Documentation > Getting started
+# Documentation: Getting started
 
-Simple PDO requires a `PDO` instance to be passed to its constructor.
-This can be done manually, or by using the included `DbFactory` to create the Simple PDO instance for you.
+Simple PDO can either be instantiated manually, or via the included Simple PDO factory.
 
 - [Manual setup](#manual-setup)
 - [Factory setup](#factory-setup)
 
 ## Manual setup
 
-### Create a PDO instance
-
-The first step is to create a PDO instance to use with Simple PDO.
-You can do this yourself, or you can use one of the included adapters to create it for you.
-
-#### Do it yourself
-
-```php
-$pdo = new PDO(
-    'mysql:host=DB_HOST;dbname=DB_TO_USE',
-    'DB_USER',
-    'DB_USER_PASSWORD'
-);
-```
-
-#### Use an adapter
-
-A `PDO` connection can be created using an `AdapterInterface`.
-Each adapter has its own required configuration array keys, as listed below.
-
-To create a `PDO` instance, use the adapter's `connect()` static method,
-which may throw the following exceptions on failure:
-
-- `Bayfront\SimplePdo\Exceptions\ConfigurationException`- Invalid adapter configuration
-- `Bayfront\SimplePdo\Exceptions\UnableToConnectException`- Unable to connect to database
-
-```php
-use Bayfront\SimplePdo\Adapters\MySql;
-use Bayfront\SimplePdo\Exceptions\SimplePDOException;
-
-$config = [
-    'host' => 'DB_HOST',
-    'port' => 3306,
-    'database' => 'DB_TO_USE',
-    'user' => 'DB_USER',
-    'password' => 'DB_USER_PASSWORD',
-    'options' => [] // Optional key => value array of connection options
-];
-
-try {
-
-    $pdo = MySQL::connect($config);
-
-} catch (SimplePDOException $e) {
-    echo $e->getMessage();
-}
-```
-
-### Create a Simple PDO instance
-
-Once you have a `PDO` instance created, you can then use it as your default database with Simple PDO:
+Once you have a [PDO instance created](pdo.md), you can then use it as your default database with Simple PDO:
 
 ```php
 use Bayfront\SimplePdo\Db;

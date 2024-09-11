@@ -3,13 +3,20 @@
 **NOTE:** All exceptions thrown by Simple PDO extend `Bayfront\SimplePdo\Exceptions\SimplePDOException`,
 so you can choose to catch exceptions as narrowly or broadly as you like.
 
-First, see [getting started](getting-started.md) to create a Simple PDO instance.
-Once an instance is created, you can begin using Simple PDO.
+Whether using the Simple PDO `Db` class, or the query builder's `Query` class,
+a `PDO` instance is required.
+
+For more information on creating a `PDO` instance, see [PDO](pdo.md).
 
 ## Query builder
 
 Simple PDO includes a helpful query builder which you may choose to utilize.
 For more information, see [query builder](query-builder.md).
+
+## Simple PDO
+
+First, see [getting started](getting-started.md) to create a Simple PDO `Db` instance.
+Once an instance is created, you can begin using Simple PDO.
 
 ## Public methods
 
