@@ -28,7 +28,7 @@ class DbFactory
 
             // Check valid adapter
 
-            if (!isset($db_config['adapter']) || !class_exists('Bayfront\PDO\Adapters\\' . $db_config['adapter'])) {
+            if (!isset($db_config['adapter']) || !class_exists('Bayfront\SimplePdo\Adapters\\' . $db_config['adapter'])) {
 
                 throw new ConfigurationException('Invalid database configuration (' . $name . '): adapter not specified or does not exist');
 
@@ -36,15 +36,15 @@ class DbFactory
 
             /** @var AdapterInterface $adapter */
 
-            $adapter = 'Bayfront\PDO\Adapters\\' . $db_config['adapter'];
+            $adapter = 'Bayfront\SimplePdo\Adapters\\' . $db_config['adapter'];
 
             if (isset($db_config['default']) && true === $db_config['default'] && !isset($db)) { // If default database
 
                 // Create connection
 
                 /*
-                 * @throws Bayfront\PDO\Exceptions\ConfigurationException
-                 * @throws Bayfront\PDO\Exceptions\UnableToConnectException
+                 * @throws Bayfront\SimplePdo\Exceptions\ConfigurationException
+                 * @throws Bayfront\SimplePdo\Exceptions\UnableToConnectException
                  */
 
                 $pdo = $adapter::connect($db_config);
@@ -58,7 +58,7 @@ class DbFactory
                 // Create connection
 
                 /*
-                 * @throws Bayfront\PDO\Exceptions\PdoException
+                 * @throws Bayfront\SimplePdo\Exceptions\PdoException
                  */
 
                 $connections[$name] = $adapter::connect($db_config);
@@ -76,7 +76,7 @@ class DbFactory
         foreach ($connections as $name => $pdo) {
 
             /*
-             * @throws Bayfront\PDO\Exceptions\InvalidDatabaseException
+             * @throws Bayfront\SimplePdo\Exceptions\InvalidDatabaseException
              */
 
             $db->addConnection($pdo, $name); // Add all additional connections
