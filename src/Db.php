@@ -132,7 +132,7 @@ class Db
     }
 
     /**
-     * Returns name of the database currently being used.
+     * Returns name of the current database connection.
      *
      * @return string
      */
@@ -564,9 +564,11 @@ class Db
 
         $this->stmt->execute(array_values($conditions));
 
+        $return = (int)$this->stmt->fetchColumn();
+
         $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
 
-        return (int)$this->stmt->fetchColumn();
+        return $return;
 
     }
 
@@ -633,9 +635,11 @@ class Db
 
         $this->stmt->execute(array_values($conditions));
 
+        $return = (int)$this->stmt->fetchColumn();
+
         $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
 
-        return (int)$this->stmt->fetchColumn();
+        return $return;
 
     }
 
@@ -716,7 +720,7 @@ class Db
     }
 
     /**
-     * Returns the ID of the last inserted row
+     * Returns the ID of the last inserted row.
      *
      * @return string
      */
@@ -726,7 +730,7 @@ class Db
     }
 
     /**
-     * Set query time to be tracked using getQueryTime and getTotalQueries.
+     * Add query time to be tracked using getQueryTime and getTotalQueries.
      * This is helpful to track queries using the query builder.
      *
      * @param string $db_name

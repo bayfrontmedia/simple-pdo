@@ -182,7 +182,7 @@ $pdo = $db->getCurrentConnection();
 
 **Description:**
 
-Returns name of the database currently being used.
+Returns name of the current database connection.
 
 **Parameters:**
 
@@ -663,10 +663,10 @@ echo $db->lastInsertId();
 
 ### setQueryTime
 
-** Description:**
+**Description:**
 
 Add a query time to be tracked using `getQueryTime` and `getTotalQueries`.
-This is helpful to track queries using the query builder.
+This is helpful to track queries using the [query builder](query-builder.md).
 
 **Parameters:**
 
@@ -714,7 +714,7 @@ echo $db->getQueryTime();
 
 **Description:**
 
-Returns the total number of queries executed for the current database.
+Returns the total number of queries executed for a given database.
 
 **Parameters:**
 
