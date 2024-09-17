@@ -26,7 +26,6 @@ Once an instance is created, you can begin using Simple PDO.
 - [useConnection](#useconnection)
 - [getConnection](#getconnection)
 - [getCurrentConnection](#getcurrentconnection)
-- [getDefaultConnectionName](#getdefaultconnectionname)
 - [getCurrentConnectionName](#getcurrentconnectionname)
 - [getConnectionNames](#getconnectionnames)
 - [connectionExists](#connectionexists)
@@ -53,6 +52,7 @@ Once an instance is created, you can begin using Simple PDO.
 - [getLastParameters](#getlastparameters)
 - [rowCount](#rowcount)
 - [lastInsertId](#lastinsertid)
+- [setQueryTime](#setquerytime)
 - [getQueryTime](#getquerytime)
 - [getTotalQueries](#gettotalqueries)
 
@@ -68,8 +68,7 @@ Add a PDO instance.
 
 - `$pdo` (PDO)
 - `$db_name` (string): Name must be unique
-- `$make_current = false` (bool): Use this connection for the next query only
-- `$make_default = false` (bool): Use this connection for each subsequent query
+- `$make_current = false` (bool): Use this connection for all subsequent queries
 
 **Returns:**
 
@@ -97,13 +96,11 @@ try {
 
 **Description:**
 
-Set given database name as current for the next query only.
-After the next query, the current database will automatically revert to the default database.
+Use a given database connection for all subsequent queries.
 
 **Parameters:**
 
 - `$db_name` (string)
-- `$make_default = false` (bool)
 
 **Returns:**
 
@@ -177,28 +174,6 @@ Returns the raw `PDO` instance of the current database.
 
 ```php
 $pdo = $db->getCurrentConnection();
-```
-
-<hr />
-
-### getDefaultConnectionName
-
-**Description:**
-
-Returns name of the default database.
-
-**Parameters:**
-
-- None
-
-**Returns:**
-
-- (string)
-
-**Example:**
-
-```php
-echo $db->getDefaultConnectionName();
 ```
 
 <hr />
@@ -686,15 +661,42 @@ echo $db->lastInsertId();
 
 <hr />
 
+### setQueryTime
+
+** Description:**
+
+Add a query time to be tracked using `getQueryTime` and `getTotalQueries`.
+This is helpful to track queries using the query builder.
+
+**Parameters:**
+
+- `$db_name` (string)
+- `$duration = 0` (float): Microseconds as float
+
+**Returns:**
+
+- (void)
+
+**Example:**
+
+```php
+$start_time = microtime(true);
+
+// Perform a query outside the Db class
+
+$db->setQueryTime('backup', microtime(true) - $start_time);
+```
+
 ### getQueryTime
 
 **Description:**
 
-Returns the total time elapsed in seconds for all queries executed for the current database.
+Returns the total time elapsed in seconds for all queries executed for a given database.
 
 **Parameters:**
 
 - `$decimals = 3` (int): Number of decimal points to return
+- `$db_name = ''` (string): Leaving this parameter blank will return the time elapsed for all database connections
 
 **Returns:**
 
@@ -716,7 +718,7 @@ Returns the total number of queries executed for the current database.
 
 **Parameters:**
 
-- None
+- `$db_name = ''` (string): Leaving this parameter blank will return the total queries for all database connections
 
 **Returns:**
 

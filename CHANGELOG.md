@@ -12,11 +12,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities
 
-## [4.1.0] - 2024.09.16
+## [5.0.0] - 2024.09.16
+
+### Added
+
+- Added `setQueryTime` method.
 
 ### Changed
 
 - Updated method for calculating query durations to be more accurate.
+- Updated `getQueryTime` and `getTotalQueries` methods to accept a specific database name.
+- Updated `DbFactory::create` method to not require a specific `default` database.
+
+### Removed
+
+- Removed concept of "default" and "current" database in favor of simply using "current".
+- Removed `getDefaultConnectionName` method.
 
 ## [4.0.1] - 2024.09.10
 

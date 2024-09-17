@@ -2,6 +2,7 @@
 
 namespace Bayfront\SimplePdo;
 
+use Bayfront\ArrayHelpers\Arr;
 use Bayfront\SimplePdo\Exceptions\InvalidDatabaseException;
 use PDO;
 use PDOStatement;
@@ -10,7 +11,6 @@ class Db
 {
 
     private static array $db_connections = []; // Db connections as PDO objects
-    private string $default_db_name;
     private string $current_db_name;
 
     public const DB_DEFAULT = 'default';
@@ -18,7 +18,7 @@ class Db
     /**
      * Constructor.
      *
-     * Sets given PDO instance as current and default database.
+     * Sets given PDO instance as current database connection.
      *
      * @param PDO $pdo
      * @param string $db_name
@@ -26,7 +26,6 @@ class Db
     public function __construct(PDO $pdo, string $db_name = self::DB_DEFAULT)
     {
         self::$db_connections[$db_name] = $pdo;
-        $this->default_db_name = $db_name;
         $this->current_db_name = $db_name;
     }
 
@@ -48,18 +47,6 @@ class Db
         }
     }
 
-    /**
-     * Returns PDO object for current database name and resets current connection to default.
-     *
-     * @return PDO
-     */
-    private function getCurrentConnectionAndReset(): PDO
-    {
-        $current = self::$db_connections[$this->current_db_name];
-        $this->current_db_name = $this->default_db_name; // Reset current connection to default
-        return $current;
-    }
-
     /*
      * |--------------------------------------------------------------------------
      * | Database connections
@@ -71,12 +58,11 @@ class Db
      *
      * @param PDO $pdo
      * @param string $db_name (Name must be unique)
-     * @param bool $make_current (Use this connection for the next query only)
-     * @param bool $make_default (Use this connection for each subsequent query)
+     * @param bool $make_current (Use this connection for all subsequent queries)
      * @return self
      * @throws InvalidDatabaseException
      */
-    public function addConnection(PDO $pdo, string $db_name, bool $make_current = false, bool $make_default = false): self
+    public function addConnection(PDO $pdo, string $db_name, bool $make_current = false): self
     {
 
         if (isset(self::$db_connections[$db_name])) {
@@ -89,32 +75,22 @@ class Db
             $this->current_db_name = $db_name;
         }
 
-        if (true === $make_default) {
-            $this->default_db_name = $db_name;
-        }
-
         return $this;
 
     }
 
     /**
-     * Set given database name as current for the next query only.
-     * After the next query, the current database will automatically revert to the default database.
+     * Use a given database connection for all subsequent queries.
      *
      * @param string $db_name
-     * @param bool $make_default
      * @return self
      * @throws InvalidDatabaseException
      */
-    public function useConnection(string $db_name, bool $make_default = false): self
+    public function useConnection(string $db_name): self
     {
 
         if (!isset(self::$db_connections[$db_name])) {
             throw new InvalidDatabaseException('Database is not defined');
-        }
-
-        if (true === $make_default) {
-            $this->default_db_name = $db_name;
         }
 
         $this->current_db_name = $db_name;
@@ -153,16 +129,6 @@ class Db
     public function getCurrentConnection(): PDO
     {
         return self::$db_connections[$this->current_db_name];
-    }
-
-    /**
-     * Returns name of the default database.
-     *
-     * @return string
-     */
-    public function getDefaultConnectionName(): string
-    {
-        return $this->default_db_name;
     }
 
     /**
@@ -249,7 +215,7 @@ class Db
      */
     private function prepare(string $query): PDOStatement
     {
-        return $this->getCurrentConnectionAndReset()->prepare($query); // PDOStatement object
+        return $this->getCurrentConnection()->prepare($query); // PDOStatement object
     }
 
     /**
@@ -760,34 +726,53 @@ class Db
     }
 
     /**
-     * Returns the total time elapsed in seconds for all queries executed for the current database.
+     * Set query time to be tracked using getQueryTime and getTotalQueries.
+     * This is helpful to track queries using the query builder.
      *
-     * @param int $decimals (Number of decimal points to return)
-     * @return float
+     * @param string $db_name
+     * @param float $duration (Microseconds as float)
+     * @return void
      */
-    public function getQueryTime(int $decimals = 3): float
+    public function setQueryTime(string $db_name, float $duration = 0): void
     {
-
-        if (!isset($this->query_durations[$this->current_db_name])) {
-            return 0;
-        }
-
-        return number_format((float)array_sum($this->query_durations[$this->current_db_name]), $decimals);
+        $this->query_durations[$db_name][] = $duration;
     }
 
     /**
-     * Returns the total number of queries executed for the current database.
+     * Returns the total time elapsed in seconds for all queries executed for a given database.
      *
-     * @return int
+     * @param int $decimals (Number of decimal points to return)
+     * @param string $db_name (Leaving this parameter blank will return the time elapsed for all database connections)
+     * @return float
      */
-    public function getTotalQueries(): int
+    public function getQueryTime(int $decimals = 3, string $db_name = ''): float
     {
 
-        if (!isset($this->query_durations[$this->current_db_name])) {
+        if ($db_name == '') {
+            return number_format((float)array_sum(Arr::dot($this->query_durations)), $decimals);
+        } else if (!isset($this->query_durations[$db_name])) {
             return 0;
         }
 
-        return count($this->query_durations[$this->current_db_name]);
+        return number_format((float)array_sum($this->query_durations[$db_name]), $decimals);
+    }
+
+    /**
+     * Returns the total number of queries executed for a given database.
+     *
+     * @param string $db_name (Leaving this parameter blank will return the total queries for all database connections)
+     * @return int
+     */
+    public function getTotalQueries(string $db_name = ''): int
+    {
+
+        if ($db_name == '') {
+            return count(Arr::dot($this->query_durations));
+        } else if (!isset($this->query_durations[$db_name])) {
+            return 0;
+        }
+
+        return count($this->query_durations[$db_name]);
 
     }
 

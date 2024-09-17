@@ -24,6 +24,8 @@ class DbFactory
 
         $connections = [];
 
+        $current_db_name = null;
+
         foreach ($array as $name => $db_config) {
 
             // Check valid adapter
@@ -38,14 +40,11 @@ class DbFactory
 
             $adapter = 'Bayfront\SimplePdo\Adapters\\' . $db_config['adapter'];
 
-            if (isset($db_config['default']) && true === $db_config['default'] && !isset($db)) { // If default database
+            if ($current_db_name === null) { // First listed connection
+
+                $current_db_name = $name;
 
                 // Create connection
-
-                /*
-                 * @throws Bayfront\SimplePdo\Exceptions\ConfigurationException
-                 * @throws Bayfront\SimplePdo\Exceptions\UnableToConnectException
-                 */
 
                 $pdo = $adapter::connect($db_config);
 
@@ -57,30 +56,18 @@ class DbFactory
 
                 // Create connection
 
-                /*
-                 * @throws Bayfront\SimplePdo\Exceptions\PdoException
-                 */
-
                 $connections[$name] = $adapter::connect($db_config);
 
             }
 
         }
 
-        if (!isset($db)) { // If default database does not exist
-
-            throw new ConfigurationException('Invalid database configuration: no default database specified');
-
+        if (!isset($db)) { // If no databases were listed
+            throw new ConfigurationException('Invalid database configuration: no database specified');
         }
 
         foreach ($connections as $name => $pdo) {
-
-            /*
-             * @throws Bayfront\SimplePdo\Exceptions\InvalidDatabaseException
-             */
-
             $db->addConnection($pdo, $name); // Add all additional connections
-
         }
 
         return $db;
