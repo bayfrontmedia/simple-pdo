@@ -46,7 +46,6 @@ use Bayfront\SimplePdo\Exceptions\SimplePDOException;
 
 $config = [ 
     'primary' => [ // Connection name
-        'default' => true, // One connection on the array must be defined as default
         'adapter' => 'MySql', // Adapter to use
         'host' => 'DB_HOST',
         'port' => 3306,
@@ -74,5 +73,5 @@ try {
 ```
 
 The array keys define the connection names.
-Each name must be unique.
-One connection must be defined as `default`, and each connection must specify a valid adapter.
+Each name must be unique, and each connection must specify a valid adapter.
+The first listed connection name in the array will be set as the current database.

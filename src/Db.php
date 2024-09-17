@@ -2,6 +2,7 @@
 
 namespace Bayfront\SimplePdo;
 
+use Bayfront\ArrayHelpers\Arr;
 use Bayfront\SimplePdo\Exceptions\InvalidDatabaseException;
 use PDO;
 use PDOStatement;
@@ -10,7 +11,6 @@ class Db
 {
 
     private static array $db_connections = []; // Db connections as PDO objects
-    private string $default_db_name;
     private string $current_db_name;
 
     public const DB_DEFAULT = 'default';
@@ -18,7 +18,7 @@ class Db
     /**
      * Constructor.
      *
-     * Sets given PDO instance as current and default database.
+     * Sets given PDO instance as current database connection.
      *
      * @param PDO $pdo
      * @param string $db_name
@@ -26,7 +26,6 @@ class Db
     public function __construct(PDO $pdo, string $db_name = self::DB_DEFAULT)
     {
         self::$db_connections[$db_name] = $pdo;
-        $this->default_db_name = $db_name;
         $this->current_db_name = $db_name;
     }
 
@@ -48,18 +47,6 @@ class Db
         }
     }
 
-    /**
-     * Returns PDO object for current database name and resets current connection to default.
-     *
-     * @return PDO
-     */
-    private function getCurrentConnectionAndReset(): PDO
-    {
-        $current = self::$db_connections[$this->current_db_name];
-        $this->current_db_name = $this->default_db_name; // Reset current connection to default
-        return $current;
-    }
-
     /*
      * |--------------------------------------------------------------------------
      * | Database connections
@@ -71,12 +58,11 @@ class Db
      *
      * @param PDO $pdo
      * @param string $db_name (Name must be unique)
-     * @param bool $make_current (Use this connection for the next query only)
-     * @param bool $make_default (Use this connection for each subsequent query)
+     * @param bool $make_current (Use this connection for all subsequent queries)
      * @return self
      * @throws InvalidDatabaseException
      */
-    public function addConnection(PDO $pdo, string $db_name, bool $make_current = false, bool $make_default = false): self
+    public function addConnection(PDO $pdo, string $db_name, bool $make_current = false): self
     {
 
         if (isset(self::$db_connections[$db_name])) {
@@ -89,32 +75,22 @@ class Db
             $this->current_db_name = $db_name;
         }
 
-        if (true === $make_default) {
-            $this->default_db_name = $db_name;
-        }
-
         return $this;
 
     }
 
     /**
-     * Set given database name as current for the next query only.
-     * After the next query, the current database will automatically revert to the default database.
+     * Use a given database connection for all subsequent queries.
      *
      * @param string $db_name
-     * @param bool $make_default
      * @return self
      * @throws InvalidDatabaseException
      */
-    public function useConnection(string $db_name, bool $make_default = false): self
+    public function useConnection(string $db_name): self
     {
 
         if (!isset(self::$db_connections[$db_name])) {
             throw new InvalidDatabaseException('Database is not defined');
-        }
-
-        if (true === $make_default) {
-            $this->default_db_name = $db_name;
         }
 
         $this->current_db_name = $db_name;
@@ -156,17 +132,7 @@ class Db
     }
 
     /**
-     * Returns name of the default database.
-     *
-     * @return string
-     */
-    public function getDefaultConnectionName(): string
-    {
-        return $this->default_db_name;
-    }
-
-    /**
-     * Returns name of the database currently being used.
+     * Returns name of the current database connection.
      *
      * @return string
      */
@@ -213,11 +179,32 @@ class Db
      *
      * @return void
      */
-    private function beginQuery(): void
+    private function reset(): void
     {
         $this->query_start = microtime(true);
         $this->stmt = NULL;
         $this->raw_query = '';
+    }
+
+    /**
+     * Begin, prepare and execute query.
+     *
+     * @param string $query
+     * @param array $params
+     * @return bool
+     */
+    private function executeQuery(string $query, array $params = []): bool
+    {
+        $this->reset();
+
+        $this->stmt = $this->prepare($query);
+
+        $this->raw_query = $query;
+
+        $this->bindParams($params);
+
+        return $this->stmt->execute();
+
     }
 
     /**
@@ -228,7 +215,7 @@ class Db
      */
     private function prepare(string $query): PDOStatement
     {
-        return $this->getCurrentConnectionAndReset()->prepare($query); // PDOStatement object
+        return $this->getCurrentConnection()->prepare($query); // PDOStatement object
     }
 
     /**
@@ -284,15 +271,7 @@ class Db
     public function query(string $query, array $params = []): bool
     {
 
-        $this->beginQuery();
-
-        $this->stmt = $this->prepare($query);
-
-        $this->raw_query = $query;
-
-        $this->bindParams($params);
-
-        $return = $this->stmt->execute();
+        $return = $this->executeQuery($query, $params);
 
         $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
 
@@ -311,13 +290,17 @@ class Db
     public function select(string $query, array $params = [], bool $return_array = true): mixed
     {
 
-        $this->query($query, $params);
+        $this->executeQuery($query, $params);
 
         if ($return_array) {
-            return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+            $return = $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            $return = $this->stmt->fetchAll(PDO::FETCH_OBJ);
         }
 
-        return $this->stmt->fetchAll(PDO::FETCH_OBJ);
+        $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
+
+        return $return;
 
     }
 
@@ -332,13 +315,17 @@ class Db
     public function row(string $query, array $params = [], bool $return_array = true): mixed
     {
 
-        $this->query($query, $params);
+        $this->executeQuery($query, $params);
 
         if ($return_array) {
-            return $this->stmt->fetch(PDO::FETCH_ASSOC);
+            $return = $this->stmt->fetch(PDO::FETCH_ASSOC);
+        } else {
+            $return = $this->stmt->fetch(PDO::FETCH_OBJ);
         }
 
-        return $this->stmt->fetch(PDO::FETCH_OBJ);
+        $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
+
+        return $return;
 
     }
 
@@ -351,8 +338,15 @@ class Db
      */
     public function single(string $query, array $params = []): mixed
     {
-        $this->query($query, $params);
-        return $this->stmt->fetchColumn();
+
+        $this->executeQuery($query, $params);
+
+        $return = $this->stmt->fetchColumn();
+
+        $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
+
+        return $return;
+
     }
 
     /**
@@ -366,7 +360,7 @@ class Db
     public function insert(string $table, array $values, bool $overwrite = true): bool
     {
 
-        $this->beginQuery();
+        $this->reset();
 
         $query = 'INSERT INTO ' . $table . ' (';
 
@@ -423,7 +417,7 @@ class Db
     public function update(string $table, array $values, array $conditions): bool
     {
 
-        $this->beginQuery();
+        $this->reset();
 
         $query = 'UPDATE ' . $table . ' SET ';
 
@@ -486,7 +480,7 @@ class Db
     public function delete(string $table, array $conditions): bool
     {
 
-        $this->beginQuery();
+        $this->reset();
 
         /** @noinspection SqlWithoutWhere */
 
@@ -538,7 +532,7 @@ class Db
     public function count(string $table, array $conditions = []): int
     {
 
-        $this->beginQuery();
+        $this->reset();
 
         $query = 'SELECT COUNT(*) FROM ' . $table;
 
@@ -570,9 +564,11 @@ class Db
 
         $this->stmt->execute(array_values($conditions));
 
+        $return = (int)$this->stmt->fetchColumn();
+
         $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
 
-        return (int)$this->stmt->fetchColumn();
+        return $return;
 
     }
 
@@ -607,7 +603,7 @@ class Db
     public function sum(string $table, string $column, array $conditions = []): int
     {
 
-        $this->beginQuery();
+        $this->reset();
 
         $query = 'SELECT SUM(' . $column . ') FROM ' . $table;
 
@@ -639,9 +635,11 @@ class Db
 
         $this->stmt->execute(array_values($conditions));
 
+        $return = (int)$this->stmt->fetchColumn();
+
         $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
 
-        return (int)$this->stmt->fetchColumn();
+        return $return;
 
     }
 
@@ -722,7 +720,7 @@ class Db
     }
 
     /**
-     * Returns the ID of the last inserted row
+     * Returns the ID of the last inserted row.
      *
      * @return string
      */
@@ -732,34 +730,53 @@ class Db
     }
 
     /**
-     * Returns the total time elapsed in seconds for all queries executed for the current database.
+     * Add query time to be tracked using getQueryTime and getTotalQueries.
+     * This is helpful to track queries using the query builder.
      *
-     * @param int $decimals (Number of decimal points to return)
-     * @return float
+     * @param string $db_name
+     * @param float $duration (Microseconds as float)
+     * @return void
      */
-    public function getQueryTime(int $decimals = 3): float
+    public function setQueryTime(string $db_name, float $duration = 0): void
     {
-
-        if (!isset($this->query_durations[$this->current_db_name])) {
-            return 0;
-        }
-
-        return number_format((float)array_sum($this->query_durations[$this->current_db_name]), $decimals);
+        $this->query_durations[$db_name][] = $duration;
     }
 
     /**
-     * Returns the total number of queries executed for the current database.
+     * Returns the total time elapsed in seconds for all queries executed for a given database.
      *
-     * @return int
+     * @param int $decimals (Number of decimal points to return)
+     * @param string $db_name (Leaving this parameter blank will return the time elapsed for all database connections)
+     * @return float
      */
-    public function getTotalQueries(): int
+    public function getQueryTime(int $decimals = 3, string $db_name = ''): float
     {
 
-        if (!isset($this->query_durations[$this->current_db_name])) {
+        if ($db_name == '') {
+            return number_format((float)array_sum(Arr::dot($this->query_durations)), $decimals);
+        } else if (!isset($this->query_durations[$db_name])) {
             return 0;
         }
 
-        return sizeof($this->query_durations[$this->current_db_name]);
+        return number_format((float)array_sum($this->query_durations[$db_name]), $decimals);
+    }
+
+    /**
+     * Returns the total number of queries executed for a given database.
+     *
+     * @param string $db_name (Leaving this parameter blank will return the total queries for all database connections)
+     * @return int
+     */
+    public function getTotalQueries(string $db_name = ''): int
+    {
+
+        if ($db_name == '') {
+            return count(Arr::dot($this->query_durations));
+        } else if (!isset($this->query_durations[$db_name])) {
+            return 0;
+        }
+
+        return count($this->query_durations[$db_name]);
 
     }
 
