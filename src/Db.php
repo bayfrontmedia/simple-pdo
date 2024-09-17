@@ -213,11 +213,32 @@ class Db
      *
      * @return void
      */
-    private function beginQuery(): void
+    private function reset(): void
     {
         $this->query_start = microtime(true);
         $this->stmt = NULL;
         $this->raw_query = '';
+    }
+
+    /**
+     * Begin, prepare and execute query.
+     *
+     * @param string $query
+     * @param array $params
+     * @return bool
+     */
+    private function executeQuery(string $query, array $params = []): bool
+    {
+        $this->reset();
+
+        $this->stmt = $this->prepare($query);
+
+        $this->raw_query = $query;
+
+        $this->bindParams($params);
+
+        return $this->stmt->execute();
+
     }
 
     /**
@@ -284,15 +305,7 @@ class Db
     public function query(string $query, array $params = []): bool
     {
 
-        $this->beginQuery();
-
-        $this->stmt = $this->prepare($query);
-
-        $this->raw_query = $query;
-
-        $this->bindParams($params);
-
-        $return = $this->stmt->execute();
+        $return = $this->executeQuery($query, $params);
 
         $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
 
@@ -311,13 +324,17 @@ class Db
     public function select(string $query, array $params = [], bool $return_array = true): mixed
     {
 
-        $this->query($query, $params);
+        $this->executeQuery($query, $params);
 
         if ($return_array) {
-            return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+            $return = $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            $return = $this->stmt->fetchAll(PDO::FETCH_OBJ);
         }
 
-        return $this->stmt->fetchAll(PDO::FETCH_OBJ);
+        $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
+
+        return $return;
 
     }
 
@@ -332,13 +349,17 @@ class Db
     public function row(string $query, array $params = [], bool $return_array = true): mixed
     {
 
-        $this->query($query, $params);
+        $this->executeQuery($query, $params);
 
         if ($return_array) {
-            return $this->stmt->fetch(PDO::FETCH_ASSOC);
+            $return = $this->stmt->fetch(PDO::FETCH_ASSOC);
+        } else {
+            $return = $this->stmt->fetch(PDO::FETCH_OBJ);
         }
 
-        return $this->stmt->fetch(PDO::FETCH_OBJ);
+        $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
+
+        return $return;
 
     }
 
@@ -351,8 +372,15 @@ class Db
      */
     public function single(string $query, array $params = []): mixed
     {
-        $this->query($query, $params);
-        return $this->stmt->fetchColumn();
+
+        $this->executeQuery($query, $params);
+
+        $return = $this->stmt->fetchColumn();
+
+        $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
+
+        return $return;
+
     }
 
     /**
@@ -366,7 +394,7 @@ class Db
     public function insert(string $table, array $values, bool $overwrite = true): bool
     {
 
-        $this->beginQuery();
+        $this->reset();
 
         $query = 'INSERT INTO ' . $table . ' (';
 
@@ -423,7 +451,7 @@ class Db
     public function update(string $table, array $values, array $conditions): bool
     {
 
-        $this->beginQuery();
+        $this->reset();
 
         $query = 'UPDATE ' . $table . ' SET ';
 
@@ -486,7 +514,7 @@ class Db
     public function delete(string $table, array $conditions): bool
     {
 
-        $this->beginQuery();
+        $this->reset();
 
         /** @noinspection SqlWithoutWhere */
 
@@ -538,7 +566,7 @@ class Db
     public function count(string $table, array $conditions = []): int
     {
 
-        $this->beginQuery();
+        $this->reset();
 
         $query = 'SELECT COUNT(*) FROM ' . $table;
 
@@ -607,7 +635,7 @@ class Db
     public function sum(string $table, string $column, array $conditions = []): int
     {
 
-        $this->beginQuery();
+        $this->reset();
 
         $query = 'SELECT SUM(' . $column . ') FROM ' . $table;
 
@@ -759,7 +787,7 @@ class Db
             return 0;
         }
 
-        return sizeof($this->query_durations[$this->current_db_name]);
+        return count($this->query_durations[$this->current_db_name]);
 
     }
 

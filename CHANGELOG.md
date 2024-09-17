@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities
 
+## [4.1.0] - 2024.09.16
+
+### Changed
+
+- Updated method for calculating query durations to be more accurate.
+
 ## [4.0.1] - 2024.09.10
 
 ### Fixed
