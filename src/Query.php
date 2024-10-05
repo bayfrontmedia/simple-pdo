@@ -267,53 +267,24 @@ class Query
     public const VALUE_TRUE = 'true';
     public const VALUE_FALSE = 'false';
 
+    private const CONDITION_AND = 'AND';
+    private const CONDITION_OR = 'OR';
+
     /**
-     * Adds a WHERE clause to the query.
-     *
-     * If the column type is JSON, keys from within the JSON string can be searched with the format of COLUMN->KEY.
-     * JSON fields which do not exist are treated as null.
-     *
-     * Available operators are:
-     *
-     * - eq (equals)
-     * - !eq (does not equal)
-     * - lt (less than)
-     * - gt (greater than)
-     * - le (less than or equal to)
-     * - ge (greater than or equal to)
-     * - sw (starts with)
-     * - !sw (does not start with)
-     * - ew (ends with)
-     * - !ew (does not end with)
-     * - has (has)
-     * - !has (does not have)
-     * - in (in)
-     * - !in (not in)
-     * - null (is or is not null)
-     *
-     * The OPERATOR_* constants can be used for this purpose.
-     *
-     * The in and !in operators accept multiple comma-separated values.
-     *
-     * The "null" operator accepts two values: true and false for is null or is not null.
-     * The VALUE_* constants can be used for this purpose.
-     *
-     * NOTE: Some native MySQL functions can be used as the $value, however, they will be
-     * injected into the query as strings, so they can be vulnerable to SQL injection.
-     *
+     * @param string $condition (and/or)
      * @param string $column
      * @param string $operator
-     * @param mixed $value
-     * @return self
+     * @param $value
+     * @return void
      * @throws QueryException
      */
-    public function where(string $column, string $operator, mixed $value): self
+    private function addCondition(string $condition, string $column, string $operator, $value): void
     {
 
         if (!isset($this->query[self::QUERY_WHERE])) {
-            $this->query[self::QUERY_WHERE] = ' WHERE ';
+            $condition = ' WHERE (';
         } else {
-            $this->query[self::QUERY_WHERE] .= ' AND ';
+            $condition = ' ' . $condition . ' (';
         }
 
         if (!in_array($operator, [
@@ -356,78 +327,80 @@ class Query
 
         // Check operators
 
+        $placeholders = [];
+
         switch ($operator) {
 
             case self::OPERATOR_STARTS_WITH:
 
                 if ($this->is_function($value)) {
-                    $this->query[self::QUERY_WHERE] .= $column . ' LIKE ' . $value;
+                    $condition .= $column . ' LIKE ' . $value;
                     break;
                 }
 
-                $this->placeholders[] = $value . '%';
-                $this->query[self::QUERY_WHERE] .= $column . ' LIKE ?';
+                $placeholders[] = $value . '%';
+                $condition .= $column . ' LIKE ?';
                 break;
 
             case self::OPERATOR_DOES_NOT_START_WITH:
 
                 if ($this->is_function($value)) {
-                    $this->query[self::QUERY_WHERE] .= $column . ' NOT LIKE ' . $value;
+                    $condition .= $column . ' NOT LIKE ' . $value;
                     break;
                 }
 
-                $this->placeholders[] = $value . '%';
-                $this->query[self::QUERY_WHERE] .= $column . ' NOT LIKE ?';
+                $placeholders[] = $value . '%';
+                $condition .= $column . ' NOT LIKE ?';
                 break;
 
             case self::OPERATOR_ENDS_WITH:
 
                 if ($this->is_function($value)) {
-                    $this->query[self::QUERY_WHERE] .= $column . ' LIKE ' . $value;
+                    $condition .= $column . ' LIKE ' . $value;
                     break;
                 }
 
-                $this->placeholders[] = '%' . $value;
-                $this->query[self::QUERY_WHERE] .= $column . ' LIKE ?';
+                $placeholders[] = '%' . $value;
+                $condition .= $column . ' LIKE ?';
                 break;
 
             case self::OPERATOR_DOES_NOT_END_WITH:
 
                 if ($this->is_function($value)) {
-                    $this->query[self::QUERY_WHERE] .= $column . ' NOT LIKE ' . $value;
+                    $condition .= $column . ' NOT LIKE ' . $value;
                     break;
                 }
 
-                $this->placeholders[] = '%' . $value;
-                $this->query[self::QUERY_WHERE] .= $column . ' NOT LIKE ?';
+                $placeholders[] = '%' . $value;
+                $condition .= $column . ' NOT LIKE ?';
                 break;
 
             case self::OPERATOR_HAS:
 
                 if ($this->is_function($value)) {
-                    $this->query[self::QUERY_WHERE] .= $column . ' LIKE ' . $value;
+                    $condition .= $column . ' LIKE ' . $value;
                     break;
                 }
 
-                $this->placeholders[] = '%' . $value . '%';
-                $this->query[self::QUERY_WHERE] .= $column . ' LIKE ?';
+                $placeholders[] = '%' . $value . '%';
+                $condition .= $column . ' LIKE ?';
                 break;
 
             case self::OPERATOR_DOES_NOT_HAVE:
 
                 if ($this->is_function($value)) {
-                    $this->query[self::QUERY_WHERE] .= $column . ' NOT LIKE ' . $value;
+                    $condition .= $column . ' NOT LIKE ' . $value;
                     break;
                 }
 
-                $this->placeholders[] = '%' . $value . '%';
-                $this->query[self::QUERY_WHERE] .= $column . ' NOT LIKE ?';
+                $placeholders[] = '%' . $value . '%';
+                $condition .= $column . ' NOT LIKE ?';
                 break;
 
             case self::OPERATOR_IN:
 
                 if ($this->is_function($value)) {
-                    $this->query[self::QUERY_WHERE] .= $column . ' IN (' . $value . ')';
+                    $condition .= $column . ' IN (' . $value . ')';
                     break;
                 }
 
@@ -437,18 +410,18 @@ class Query
 
                 foreach ($in_values as $val) {
 
-                    $this->placeholders[] = $val;
+                    $placeholders[] = $val;
 
                 }
 
-                $this->query[self::QUERY_WHERE] .= $column . ' IN (' . $in . ')';
+                $condition .= $column . ' IN (' . $in . ')';
 
                 break;
 
             case self::OPERATOR_NOT_IN:
 
                 if ($this->is_function($value)) {
-                    $this->query[self::QUERY_WHERE] .= $column . ' NOT IN (' . $value . ')';
+                    $condition .= $column . ' NOT IN (' . $value . ')';
                     break;
                 }
 
@@ -458,11 +431,11 @@ class Query
 
                 foreach ($in_values as $val) {
 
-                    $this->placeholders[] = $val;
+                    $placeholders[] = $val;
 
                 }
 
-                $this->query[self::QUERY_WHERE] .= $column . ' NOT IN (' . $in . ')';
+                $condition .= $column . ' NOT IN (' . $in . ')';
 
                 break;
 
@@ -470,11 +443,11 @@ class Query
 
                 if ($value == self::VALUE_TRUE) {
 
-                    $this->query[self::QUERY_WHERE] .= $column . ' IS NULL';
+                    $condition .= $column . ' IS NULL';
 
                 } else if ($value == self::VALUE_FALSE) {
 
-                    $this->query[self::QUERY_WHERE] .= $column . ' IS NOT NULL';
+                    $condition .= $column . ' IS NOT NULL';
 
                 } else {
 
@@ -488,23 +461,92 @@ class Query
 
                 if ($value == '') { // Empty string needs no placeholder
 
-                    $this->query[self::QUERY_WHERE] .= $column . " " . $operator . " ''";
+                    $condition .= $column . " " . $operator . " ''";
 
                 } else if ($this->is_function($value)) {
 
-                    $this->query[self::QUERY_WHERE] .= $column . ' ' . $operator . ' ' . $value;
+                    $condition .= $column . ' ' . $operator . ' ' . $value;
 
                 } else {
 
-                    $this->placeholders[] = $value;
-                    $this->query[self::QUERY_WHERE] .= $column . ' ' . $operator . ' ?';
+                    $placeholders[] = $value;
+                    $condition .= $column . ' ' . $operator . ' ?';
 
                 }
 
         }
 
-        return $this;
+        if (!isset($this->query[self::QUERY_WHERE])) {
+            $this->query[self::QUERY_WHERE] = $condition . ')';
+        } else {
+            $this->query[self::QUERY_WHERE] .= $condition . ')';
+        }
 
+        $this->placeholders = array_merge($this->placeholders, $placeholders);
+
+    }
+
+    /**
+     * Adds a WHERE/AND WHERE clause to the query.
+     *
+     * If the column type is JSON, keys from within the JSON string can be searched with the format of COLUMN->KEY.
+     * JSON fields which do not exist are treated as null.
+     *
+     * Available operators are:
+     *
+     * - eq (equals)
+     * - !eq (does not equal)
+     * - lt (less than)
+     * - gt (greater than)
+     * - le (less than or equal to)
+     * - ge (greater than or equal to)
+     * - sw (starts with)
+     * - !sw (does not start with)
+     * - ew (ends with)
+     * - !ew (does not end with)
+     * - has (has)
+     * - !has (does not have)
+     * - in (in)
+     * - !in (not in)
+     * - null (is or is not null)
+     *
+     * The OPERATOR_* constants can be used for this purpose.
+     *
+     * The in and !in operators accept multiple comma-separated values.
+     *
+     * The "null" operator accepts two values: true and false for is null or is not null.
+     * The VALUE_* constants can be used for this purpose.
+     *
+     * NOTE: Some native MySQL functions can be used as the $value, however, they will be
+     * injected into the query as strings, so they can be vulnerable to SQL injection.
+     *
+     * @param string $column
+     * @param string $operator
+     * @param mixed $value
+     * @return self
+     * @throws QueryException
+     */
+    public function where(string $column, string $operator, mixed $value): self
+    {
+        $this->addCondition(self::CONDITION_AND, $column, $operator, $value);
+        return $this;
+    }
+
+    /**
+     * Adds an OR/AND OR clause to the query.
+     *
+     * See where().
+     *
+     * @param string $column
+     * @param string $operator
+     * @param mixed $value
+     * @return $this
+     * @throws QueryException
+     */
+    public function orWhere(string $column, string $operator, mixed $value): self
+    {
+        $this->addCondition(self::CONDITION_OR, $column, $operator, $value);
+        return $this;
     }
 
     /**

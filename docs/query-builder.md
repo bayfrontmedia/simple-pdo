@@ -30,6 +30,7 @@ $query = new Query($pdo); // $pdo as a PDO instance
 - [rightjoin](#rightjoin)
 - [select](#select)
 - [where](#where)
+- [orWhere](#orwhere)
 - [orderBy](#orderby)
 - [orderByRand](#orderbyrand)
 - [limit](#limit)
@@ -156,7 +157,7 @@ JSON fields which do not exist are returned with a value of `null`.
 
 **Description:**
 
-Adds a `WHERE` clause to the query.
+Adds a `WHERE/AND WHERE` clause to the query.
 
 If the column type is `JSON`, keys from within the JSON string can be searched with the format of `COLUMN->KEY`.
 JSON fields which do not exist are treated as `null`.
@@ -188,6 +189,30 @@ The `VALUE_*` constants can be used for this purpose.
 
 > **NOTE:** Some native MySQL functions can be used as the `$value`, however, they will be
 > injected into the query as strings, so they can be vulnerable to SQL injection. 
+
+**Parameters:**
+
+- `$column` (string)
+- `$operator` (string)
+- `$value` (mixed)
+
+**Returns:**
+
+- (self)
+
+**Throws:**
+
+- `Bayfront\SimplePdo\Exceptions\QueryException`
+
+<hr />
+
+### orWhere
+
+**Description:**
+
+Adds an `OR/AND OR` clause to the query.
+
+See [where](#where).
 
 **Parameters:**
 
