@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUnused */
 
 namespace Bayfront\SimplePdo;
 
@@ -256,13 +256,20 @@ class Query
     public const OPERATOR_GREATER_THAN_OR_EQUAL = 'ge';
     public const OPERATOR_STARTS_WITH = 'sw';
     public const OPERATOR_DOES_NOT_START_WITH = '!sw';
+    public const OPERATOR_STARTS_WITH_INSENSITIVE = 'isw';
+    public const OPERATOR_DOES_NOT_START_WITH_INSENSITIVE = '!isw';
     public const OPERATOR_ENDS_WITH = 'ew';
     public const OPERATOR_DOES_NOT_END_WITH = '!ew';
+    public const OPERATOR_ENDS_WITH_INSENSITIVE = 'iew';
+    public const OPERATOR_DOES_NOT_END_WITH_INSENSITIVE = '!iew';
     public const OPERATOR_HAS = 'has';
     public const OPERATOR_DOES_NOT_HAVE = '!has';
+    public const OPERATOR_HAS_INSENSITIVE = 'ihas';
+    public const OPERATOR_DOES_NOT_HAVE_INSENSITIVE = '!ihas';
     public const OPERATOR_IN = 'in';
     public const OPERATOR_NOT_IN = '!in';
     public const OPERATOR_NULL = 'null';
+    public const OPERATOR_NOT_NULL = '!null';
 
     public const VALUE_TRUE = 'true';
     public const VALUE_FALSE = 'false';
@@ -296,13 +303,20 @@ class Query
             self::OPERATOR_GREATER_THAN_OR_EQUAL,
             self::OPERATOR_STARTS_WITH,
             self::OPERATOR_DOES_NOT_START_WITH,
+            self::OPERATOR_STARTS_WITH_INSENSITIVE,
+            self::OPERATOR_DOES_NOT_START_WITH_INSENSITIVE,
             self::OPERATOR_ENDS_WITH,
             self::OPERATOR_DOES_NOT_END_WITH,
+            self::OPERATOR_ENDS_WITH_INSENSITIVE,
+            self::OPERATOR_DOES_NOT_END_WITH_INSENSITIVE,
             self::OPERATOR_HAS,
             self::OPERATOR_DOES_NOT_HAVE,
+            self::OPERATOR_HAS_INSENSITIVE,
+            self::OPERATOR_DOES_NOT_HAVE_INSENSITIVE,
             self::OPERATOR_IN,
             self::OPERATOR_NOT_IN,
-            self::OPERATOR_NULL
+            self::OPERATOR_NULL,
+            self::OPERATOR_NOT_NULL
         ])) {
             throw new QueryException('Unable to build query: invalid operator (' . $operator . ') for column (' . $column . ')');
         }
@@ -334,6 +348,28 @@ class Query
             case self::OPERATOR_STARTS_WITH:
 
                 if ($this->is_function($value)) {
+                    $condition .= 'BINARY ' . $column . ' LIKE ' . $value;
+                    break;
+                }
+
+                $placeholders[] = $value . '%';
+                $condition .= 'BINARY ' . $column . ' LIKE ?';
+                break;
+
+            case self::OPERATOR_DOES_NOT_START_WITH:
+
+                if ($this->is_function($value)) {
+                    $condition .= 'BINARY ' . $column . ' NOT LIKE ' . $value;
+                    break;
+                }
+
+                $placeholders[] = $value . '%';
+                $condition .= 'BINARY ' . $column . ' NOT LIKE ?';
+                break;
+
+            case self::OPERATOR_STARTS_WITH_INSENSITIVE:
+
+                if ($this->is_function($value)) {
                     $condition .= $column . ' LIKE ' . $value;
                     break;
                 }
@@ -342,7 +378,7 @@ class Query
                 $condition .= $column . ' LIKE ?';
                 break;
 
-            case self::OPERATOR_DOES_NOT_START_WITH:
+            case self::OPERATOR_DOES_NOT_START_WITH_INSENSITIVE:
 
                 if ($this->is_function($value)) {
                     $condition .= $column . ' NOT LIKE ' . $value;
@@ -356,6 +392,28 @@ class Query
             case self::OPERATOR_ENDS_WITH:
 
                 if ($this->is_function($value)) {
+                    $condition .= 'BINARY ' . $column . ' LIKE ' . $value;
+                    break;
+                }
+
+                $placeholders[] = '%' . $value;
+                $condition .= 'BINARY ' . $column . ' LIKE ?';
+                break;
+
+            case self::OPERATOR_DOES_NOT_END_WITH:
+
+                if ($this->is_function($value)) {
+                    $condition .= 'BINARY ' . $column . ' NOT LIKE ' . $value;
+                    break;
+                }
+
+                $placeholders[] = '%' . $value;
+                $condition .= 'BINARY ' . $column . ' NOT LIKE ?';
+                break;
+
+            case self::OPERATOR_ENDS_WITH_INSENSITIVE:
+
+                if ($this->is_function($value)) {
                     $condition .= $column . ' LIKE ' . $value;
                     break;
                 }
@@ -364,7 +422,7 @@ class Query
                 $condition .= $column . ' LIKE ?';
                 break;
 
-            case self::OPERATOR_DOES_NOT_END_WITH:
+            case self::OPERATOR_DOES_NOT_END_WITH_INSENSITIVE:
 
                 if ($this->is_function($value)) {
                     $condition .= $column . ' NOT LIKE ' . $value;
@@ -378,6 +436,28 @@ class Query
             case self::OPERATOR_HAS:
 
                 if ($this->is_function($value)) {
+                    $condition .= 'BINARY ' . $column . ' LIKE ' . $value;
+                    break;
+                }
+
+                $placeholders[] = '%' . $value . '%';
+                $condition .= 'BINARY ' . $column . ' LIKE ?';
+                break;
+
+            case self::OPERATOR_DOES_NOT_HAVE:
+
+                if ($this->is_function($value)) {
+                    $condition .= 'BINARY ' . $column . ' NOT LIKE ' . $value;
+                    break;
+                }
+
+                $placeholders[] = '%' . $value . '%';
+                $condition .= 'BINARY ' . $column . ' NOT LIKE ?';
+                break;
+
+            case self::OPERATOR_HAS_INSENSITIVE:
+
+                if ($this->is_function($value)) {
                     $condition .= $column . ' LIKE ' . $value;
                     break;
                 }
@@ -386,7 +466,7 @@ class Query
                 $condition .= $column . ' LIKE ?';
                 break;
 
-            case self::OPERATOR_DOES_NOT_HAVE:
+            case self::OPERATOR_DOES_NOT_HAVE_INSENSITIVE:
 
                 if ($this->is_function($value)) {
                     $condition .= $column . ' NOT LIKE ' . $value;
@@ -450,9 +530,23 @@ class Query
                     $condition .= $column . ' IS NOT NULL';
 
                 } else {
-
                     throw new QueryException('Unable to build query: invalid value (' . $value . ') for operator (' . self::OPERATOR_NULL . ')');
+                }
 
+                break;
+
+            case self::OPERATOR_NOT_NULL:
+
+                if ($value == self::VALUE_TRUE) {
+
+                    $condition .= $column . ' IS NOT NULL';
+
+                } else if ($value == self::VALUE_FALSE) {
+
+                    $condition .= $column . ' IS NULL';
+
+                } else {
+                    throw new QueryException('Unable to build query: invalid value (' . $value . ') for operator (' . self::OPERATOR_NOT_NULL . ')');
                 }
 
                 break;
@@ -766,16 +860,35 @@ class Query
         return $this->placeholders;
     }
 
+    public const AGGREGATE_AVG = 'AVG';
+    public const AGGREGATE_AVG_DISTINCT = 'AVG_DISTINCT';
+    public const AGGREGATE_COUNT = 'COUNT';
+    public const AGGREGATE_COUNT_DISTINCT = 'COUNT_DISTINCT';
+    public const AGGREGATE_MAX = 'MAX';
+    public const AGGREGATE_MIN = 'MIN';
+    public const AGGREGATE_SUM = 'SUM';
+    public const AGGREGATE_SUM_DISTINCT = 'SUM_DISTINCT';
+
     /**
-     * Returns total number of rows found for the query without limit restrictions.
+     * Return calculation of an aggregate function.
      *
-     * NOTE: To get the number of rows affected by a DELETE, use the Bayfront\SimplePdo\Db->rowCount() method.
-     *
-     * @return int
+     * @param string $aggregate (Any AGGREGATE_* constant)
+     * @param string $column
+     * @param int $decimals
+     * @return float
      */
-    public function getTotalRows(): int
+    public function aggregate(string $aggregate, string $column = '*', int $decimals = 2): float
     {
-        $query = 'SELECT COUNT(*)'
+
+        $exp = explode('_', $aggregate, 2);
+
+        if (isset($exp[1])) {
+            $select = $exp[0] . '(' . $exp[1] . ' ' . $column . ')';
+        } else {
+            $select = $exp[0] . '(' . $column . ')';
+        }
+
+        $query = 'SELECT ' . $select
             . Arr::get($this->query, self::QUERY_FROM, '')
             . implode('', Arr::get($this->query, self::QUERY_INNER_JOIN, []))
             . implode('', Arr::get($this->query, self::QUERY_LEFT_JOIN, []))
@@ -786,7 +899,21 @@ class Query
 
         $stmt->execute($this->placeholders);
 
-        return $stmt->fetchColumn();
+        return round($stmt->fetchColumn(), $decimals);
+
+    }
+
+    /**
+     * Returns total number of rows found for the query without limit restrictions.
+     *
+     * NOTE: To get the number of rows affected by a DELETE, use the Bayfront\SimplePdo\Db->rowCount() method.
+     *
+     * @deprecated Depreciated in favor of aggregate()
+     * @return int
+     */
+    public function getTotalRows(): int
+    {
+        return (int)$this->aggregate(self::AGGREGATE_COUNT);
     }
 
 }

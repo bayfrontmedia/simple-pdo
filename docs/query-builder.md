@@ -43,6 +43,7 @@ $query = new Query($pdo); // $pdo as a PDO instance
 - [single](#single)
 - [getLastQuery](#getlastquery)
 - [getLastParameters](#getlastparameters)
+- [aggregate](#aggregate)
 - [getTotalRows](#gettotalrows)
 
 <hr />
@@ -172,19 +173,26 @@ Available operators are:
 - `ge` (greater than or equal to)
 - `sw` (starts with)
 - `!sw` (does not start with)
+- `isw` (starts with - case-insensitive)
+- `!isw` (does not start with - case-insensitive)
 - `ew` (ends with)
 - `!ew` (does not end with)
+- `iew` (ends with - case-insensitive)
+- `!iew` (does not end with - case-insensitive)
 - `has` (has)
 - `!has` (does not have)
+- `ihas` (has - case-insensitive)
+- `!ihas` (does not have - case-insensitive)
 - `in` (in)
 - `!in` (not in)
-- `null` (is or is not `null`)
+- `null` (is null)
+- `!null` (is not null)
 
 The `OPERATOR_*` constants can be used for this purpose.
 
 The `in` and `!in` operators accept multiple comma-separated values.
 
-The `null` operator accepts two values: `true` and `false` for `is null` or `is not null`.
+The `null` and `!null` operators accept one of two values: `true` and `false`.
 The `VALUE_*` constants can be used for this purpose.
 
 > **NOTE:** Some native MySQL functions can be used as the `$value`, however, they will be
@@ -381,6 +389,35 @@ Returns last query parameters.
 
 <hr />
 
+### aggregate
+
+**Description:**
+
+Return calculation of an aggregate function.
+
+Available `AGGREGATE_*` constants are:
+
+- `AGGREGATE_AVG`
+- `AGGREGATE_AVG_DISTINCT`
+- `AGGREGATE_COUNT`
+- `AGGREGATE_COUNT_DISTINCT`
+- `AGGREGATE_MAX`
+- `AGGREGATE_MIN`
+- `AGGREGATE_SUM`
+- `AGGREGATE_SUM_DISTINCT`
+
+**Parameters:**
+
+- `$aggregate` (string): Any `AGGREGATE_*` constant
+- `$column = '*'` (string)
+- `$decimals = 2` (int)
+
+**Returns:**
+
+- (float)
+
+<hr />
+
 ### getTotalRows
 
 **Description:**
@@ -388,6 +425,8 @@ Returns last query parameters.
 Returns total number of rows found for the query without limit restrictions.
 
 NOTE: To get the number of rows affected by a `DELETE`, use the [Bayfront\SimplePdo\Db->rowCount()](README.md#rowcount) method.
+
+This method is depreciated in favor of [aggregate](#aggregate).
 
 **Parameters:**
 

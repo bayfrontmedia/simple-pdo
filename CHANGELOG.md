@@ -12,6 +12,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities
 
+## [5.2.0] - 2024.10.08
+
+### Added
+
+- Added `aggregate` method and related constants.
+- Added the following operators:
+  - `OPERATOR_STARTS_WITH_INSENSITIVE`
+  - `OPERATOR_DOES_NOT_START_WITH_INSENSITIVE`
+  - `OPERATOR_ENDS_WITH_INSENSITIVE`
+  - `OPERATOR_DOES_NOT_END_WITH_INSENSITIVE`
+  - `OPERATOR_HAS_INSENSITIVE`
+  - `OPERATOR_DOES_NOT_HAVE_INSENSITIVE`
+  - `OPERATOR_NOT_NULL`
+
+### Depreciated
+
+- Depreciated `getTotalRows` method in favor of `aggregate`.
+
 ## [5.1.0] - 2024.10.05
 
 ### Added
