@@ -769,6 +769,12 @@ class Query
                 $arr = explode("->>'$.", rtrim($k, "'"), 2);
                 $col = $arr[0];
 
+                $col_exp = explode('.', $col, 2);
+
+                if (isset($col_exp[1])) {
+                    $col = $col_exp[1];
+                }
+
                 Arr::set($result, $col . '.' . $arr[1], $v);
                 unset($result[$k]);
 

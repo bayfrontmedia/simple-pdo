@@ -484,7 +484,7 @@ This example represents a column named `supplier` with type of `json`.
 <hr />
 
 Select up to 10 results for `name`, `color`, `quantity` from `items` table where `description` contains the word "fluffy", and the price is less than `50.00`, ordered by `name` descending.
-Also, get the total number of rows found for the query without limit restrictions.
+Also, get the total number of rows found for the query.
 
 ```php
 use Bayfront\SimplePdo\Query;
@@ -503,7 +503,7 @@ $results = $query->table('items')
     ->limit(10)
     ->get();
 
-$total_count = $query->getTotalRows();
+$total_count = $query->aggregate($query::AGGREGATE_COUNT);
 ```
 
 <hr />
@@ -530,5 +530,5 @@ $results = $query->table('items')
     ->limit(10)
     ->get();
 
-$total_count = $query->getTotalRows();
+$total_count = $query->aggregate($query::AGGREGATE_COUNT);
 ```
