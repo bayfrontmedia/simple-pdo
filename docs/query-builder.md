@@ -31,6 +31,7 @@ $query = new Query($pdo); // $pdo as a PDO instance
 - [select](#select)
 - [where](#where)
 - [orWhere](#orwhere)
+- [groupBy](#groupby)
 - [orderBy](#orderby)
 - [orderByRand](#orderbyrand)
 - [limit](#limit)
@@ -238,6 +239,22 @@ See [where](#where).
 
 <hr />
 
+### groupBy
+
+**Description:**
+
+Adds a `GROUP BY` clause.
+
+**Parameters:**
+
+- `$columns` (array)
+
+**Returns:**
+
+- (self)
+
+<hr />
+
 ### orderBy
 
 **Description:**
@@ -395,20 +412,22 @@ Returns last query parameters.
 
 Return calculation of an aggregate function.
 
-Available `AGGREGATE_*` constants are:
+Available aggregate functions are:
 
-- `AGGREGATE_AVG`
-- `AGGREGATE_AVG_DISTINCT`
-- `AGGREGATE_COUNT`
-- `AGGREGATE_COUNT_DISTINCT`
-- `AGGREGATE_MAX`
-- `AGGREGATE_MIN`
-- `AGGREGATE_SUM`
-- `AGGREGATE_SUM_DISTINCT`
+- `AVG`
+- `AVG_DISTINCT`
+- `COUNT`
+- `COUNT_DISTINCT`
+- `MAX`
+- `MIN`
+- `SUM`
+- `SUM_DISTINCT`
+
+The `AGGREGATE_*` constants can be used for this purpose.
 
 **Parameters:**
 
-- `$aggregate` (string): Any `AGGREGATE_*` constant
+- `$aggregate` (string): Any valid aggregate function
 - `$column = '*'` (string)
 - `$decimals = 2` (int)
 

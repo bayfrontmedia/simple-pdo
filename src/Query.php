@@ -27,6 +27,7 @@ class Query
     private const QUERY_RIGHT_JOIN = 'right_join';
     private const QUERY_COLUMNS = 'columns';
     private const QUERY_WHERE = 'where';
+    private const QUERY_GROUP = 'group';
     private const QUERY_SORT = 'sort';
     private const QUERY_LIMIT = 'limit';
     private const QUERY_OFFSET = 'offset';
@@ -596,19 +597,26 @@ class Query
      * - ge (greater than or equal to)
      * - sw (starts with)
      * - !sw (does not start with)
+     * - isw (starts with - case-insensitive)
+     * - !isw (does not start with - case-insensitive)
      * - ew (ends with)
      * - !ew (does not end with)
+     * - iew (ends with - case-insensitive)
+     * - !iew (does not end with - case-insensitive)
      * - has (has)
      * - !has (does not have)
+     * - ihas (has - case-insensitive)
+     * - !ihas (does not have - case-insensitive)
      * - in (in)
      * - !in (not in)
-     * - null (is or is not null)
+     * - null (null)
+     * - !null (not null)
      *
      * The OPERATOR_* constants can be used for this purpose.
      *
      * The in and !in operators accept multiple comma-separated values.
      *
-     * The "null" operator accepts two values: true and false for is null or is not null.
+     * The "null" and "!null" operators accept one of two values: "true" and "false".
      * The VALUE_* constants can be used for this purpose.
      *
      * NOTE: Some native MySQL functions can be used as the $value, however, they will be
@@ -641,6 +649,27 @@ class Query
     {
         $this->addCondition(self::CONDITION_OR, $column, $operator, $value);
         return $this;
+    }
+
+    /**
+     * Adds a GROUP BY clause.
+     *
+     * @param array $columns
+     * @return self
+     */
+    public function groupBy(array $columns): self
+    {
+
+        if (empty($columns)) {
+            return $this;
+        }
+
+        $string = ' GROUP BY ' . implode(', ', $columns);
+
+        $this->query[self::QUERY_GROUP] = rtrim($string, ', ');
+
+        return $this;
+
     }
 
     /**
@@ -747,6 +776,7 @@ class Query
             . implode('', Arr::get($this->query, self::QUERY_LEFT_JOIN, []))
             . implode('', Arr::get($this->query, self::QUERY_RIGHT_JOIN, []))
             . Arr::get($this->query, self::QUERY_WHERE, '')
+            . Arr::get($this->query, self::QUERY_GROUP, '')
             . Arr::get($this->query, self::QUERY_SORT, '')
             . Arr::get($this->query, self::QUERY_LIMIT, '')
             . Arr::get($this->query, self::QUERY_OFFSET, '');
@@ -899,13 +929,15 @@ class Query
             . implode('', Arr::get($this->query, self::QUERY_INNER_JOIN, []))
             . implode('', Arr::get($this->query, self::QUERY_LEFT_JOIN, []))
             . implode('', Arr::get($this->query, self::QUERY_RIGHT_JOIN, []))
-            . Arr::get($this->query, self::QUERY_WHERE, '');
+            . Arr::get($this->query, self::QUERY_WHERE, '')
+            . Arr::get($this->query, self::QUERY_GROUP, '')
+            . Arr::get($this->query, self::QUERY_SORT, '');
 
         $stmt = $this->pdo->prepare($query);
 
         $stmt->execute($this->placeholders);
 
-        return round($stmt->fetchColumn(), $decimals);
+        return round((float)$stmt->fetchColumn(), $decimals);
 
     }
 
