@@ -275,8 +275,8 @@ class Query
     public const VALUE_TRUE = 'true';
     public const VALUE_FALSE = 'false';
 
-    private const CONDITION_AND = 'AND';
-    private const CONDITION_OR = 'OR';
+    public const CONDITION_AND = 'AND';
+    public const CONDITION_OR = 'OR';
 
     /**
      * @param string $condition (and/or)
@@ -290,9 +290,11 @@ class Query
     {
 
         if (!isset($this->query[self::QUERY_WHERE])) {
-            $condition = ' WHERE (';
+            $condition = ' WHERE ';
+        } else if (str_ends_with($this->query[self::QUERY_WHERE], '(')) {
+            $condition = '';
         } else {
-            $condition = ' ' . $condition . ' (';
+            $condition = ' ' . $condition . ' ';
         }
 
         if (!in_array($operator, [
@@ -572,9 +574,11 @@ class Query
         }
 
         if (!isset($this->query[self::QUERY_WHERE])) {
-            $this->query[self::QUERY_WHERE] = $condition . ')';
+            //$this->query[self::QUERY_WHERE] = $condition . ')';
+            $this->query[self::QUERY_WHERE] = $condition;
         } else {
-            $this->query[self::QUERY_WHERE] .= $condition . ')';
+            //$this->query[self::QUERY_WHERE] .= $condition . ')';
+            $this->query[self::QUERY_WHERE] .= $condition;
         }
 
         $this->placeholders = array_merge($this->placeholders, $placeholders);
@@ -649,6 +653,46 @@ class Query
     {
         $this->addCondition(self::CONDITION_OR, $column, $operator, $value);
         return $this;
+    }
+
+    /**
+     * Start new clause with opening parentheses.
+     *
+     * @param string $condition
+     * @return $this
+     * @throws QueryException
+     */
+    public function startGroup(string $condition): self
+    {
+
+        if ($condition !== self::CONDITION_AND && $condition !== self::CONDITION_OR) {
+            throw new QueryException('Unable to build query: invalid condition (' . $condition . ')');
+        }
+
+        if (!isset($this->query[self::QUERY_WHERE])) {
+            $this->query[self::QUERY_WHERE] = ' WHERE (';
+        } else {
+            $this->query[self::QUERY_WHERE] .= ' ' . $condition . ' (';
+        }
+
+        return $this;
+
+    }
+
+    /**
+     * End clause with closing parentheses.
+     *
+     * @return $this
+     */
+    public function endGroup(): self
+    {
+
+        if (isset($this->query[self::QUERY_WHERE])) {
+            $this->query[self::QUERY_WHERE] .= ')';
+        }
+
+        return $this;
+
     }
 
     /**

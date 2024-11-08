@@ -31,6 +31,8 @@ $query = new Query($pdo); // $pdo as a PDO instance
 - [select](#select)
 - [where](#where)
 - [orWhere](#orwhere)
+- [startGroup](#startgroup)
+- [endGroup](#endgroup)
 - [groupBy](#groupby)
 - [orderBy](#orderby)
 - [orderByRand](#orderbyrand)
@@ -236,6 +238,45 @@ See [where](#where).
 **Throws:**
 
 - `Bayfront\SimplePdo\Exceptions\QueryException`
+
+<hr />
+
+### startGroup
+
+**Description:**
+
+Start new clause with opening parentheses.
+
+The `$condition` must be one of `AND` or `OR`.
+The `CONDITION_AND` and `CONDITION_OR` constants can be used for this purpose.
+
+**Parameters:**
+
+- `$condition` (string)
+
+**Returns:**
+
+- (self)
+
+**Throws:**
+
+- `Bayfront\SimplePdo\Exceptions\QueryException`
+
+<hr />
+
+### endGroup
+
+**Description:**
+
+End clause with closing parentheses.
+
+**Parameters:**
+
+- (none)
+
+**Returns:**
+
+- (self)
 
 <hr />
 
@@ -523,6 +564,26 @@ $results = $query->table('items')
     ->get();
 
 $total_count = $query->aggregate($query::AGGREGATE_COUNT);
+```
+
+<hr />
+
+Select the name from `items` where `price` is greater than `20.00` 
+or where `price` is less than `5.00` and quantity is less than `10` (using clause groups):
+
+```php
+use Bayfront\SimplePdo\Query;
+
+$results = $query->table('items')
+    ->select([
+        'name'
+    ])
+    ->where('price', Query::OPERATOR_GREATER_THAN, '20.00')
+    ->startGroup(Query::CONDITION_OR)
+    ->where('price', Query::OPERATOR_LESS_THAN, '5.00')
+    ->where('quantity', Query::OPERATOR_LESS_THAN, 10)
+    ->endGroup()
+    ->get();
 ```
 
 <hr />

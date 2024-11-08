@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities
 
+## [5.4.0] - 2024.11.08
+
+### Added
+
+- Added `startGroup` and `endGroup` methods.
+
 ## [5.3.0] - 2024.10.08
 
 ### Added
