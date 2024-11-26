@@ -425,9 +425,18 @@ class Db
 
         foreach ($values as $k => $v) {
 
-            $query .= $k . '=?, ';
+            if ($v === null) {
 
-            $raw_query .= $k . '=' . $v . ', ';
+                $query .= $k . '= NULL, ';
+                $raw_query .= $k . '= NULL, ';
+                unset($values[$k]);
+
+            } else {
+
+                $query .= $k . '=?, ';
+                $raw_query .= $k . '=' . $v . ', ';
+
+            }
 
         }
 
@@ -437,9 +446,18 @@ class Db
 
         foreach ($conditions as $k => $v) {
 
-            $query .= $k . '=? AND ';
+            if ($v === null) {
 
-            $raw_query .= $k . '=' . $v . ' AND ';
+                $query .= $k . ' IS NULL AND ';
+                $raw_query .= $k . ' IS NULL AND ';
+                unset($conditions[$k]);
+
+            } else {
+
+                $query .= $k . '=? AND ';
+                $raw_query .= $k . '=' . $v . ' AND ';
+
+            }
 
         }
 
@@ -496,9 +514,18 @@ class Db
 
             foreach ($conditions as $k => $v) {
 
-                $query .= $k . '=? AND ';
+                if ($v === null) {
 
-                $raw_query .= $k . '=' . $v . ' AND ';
+                    $query .= $k . ' IS NULL AND ';
+                    $raw_query .= $k . ' IS NULL AND ';
+                    unset($conditions[$k]);
+
+                } else {
+
+                    $query .= $k . '=? AND ';
+                    $raw_query .= $k . '=' . $v . ' AND ';
+
+                }
 
             }
 
@@ -546,9 +573,18 @@ class Db
 
             foreach ($conditions as $k => $v) {
 
-                $query .= $k . '=? AND ';
+                if ($v === null) {
 
-                $raw_query .= $k . '=' . $v . ' AND ';
+                    $query .= $k . ' IS NULL AND ';
+                    $raw_query .= $k . ' IS NULL AND ';
+                    unset($conditions[$k]);
+
+                } else {
+
+                    $query .= $k . '=? AND ';
+                    $raw_query .= $k . '=' . $v . ' AND ';
+
+                }
 
             }
 
@@ -617,9 +653,18 @@ class Db
 
             foreach ($conditions as $k => $v) {
 
-                $query .= $k . '=? AND ';
+                if ($v === null) {
 
-                $raw_query .= $k . '=' . $v . ' AND ';
+                    $query .= $k . ' IS NULL AND ';
+                    $raw_query .= $k . ' IS NULL AND ';
+                    unset($conditions[$k]);
+
+                } else {
+
+                    $query .= $k . '=? AND ';
+                    $raw_query .= $k . '=' . $v . ' AND ';
+
+                }
 
             }
 

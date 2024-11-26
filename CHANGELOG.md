@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities
 
+## [5.4.1] - 2024.11.26
+
+### Added
+
+- Added support for `NULL` in values and conditions of `Db` class methods.
+
 ## [5.4.0] - 2024.11.08
 
 ### Added
