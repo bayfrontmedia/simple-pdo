@@ -232,7 +232,17 @@ class Query
     {
 
         if (!str_contains($column, '.') && $this->table !== '') { // Support for joins
-            $column = $this->table . '.' . $column;
+
+            $exp = explode('(', $column, 2); // Support for functions
+
+            if (isset($exp[1])) {
+                $column = $exp[0] . '(' . $this->table . '.' . $exp[1];
+            } else {
+                $column = $this->table . '.' . $column;
+            }
+
+            return $column;
+
         }
 
         if (str_contains($column, '->')) { // JSON
