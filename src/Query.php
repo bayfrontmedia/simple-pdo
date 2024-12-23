@@ -883,12 +883,8 @@ class Query
 
         $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        if (is_array($result)) {
-
-            foreach ($result as $k => $v) {
-                $result[$k] = $this->formatResult($v);
-            }
-
+        foreach ($result as $k => $v) {
+            $result[$k] = $this->formatResult($v);
         }
 
         return $result;
