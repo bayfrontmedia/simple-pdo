@@ -240,7 +240,7 @@ class Db
                     $placeholder = ':' . $placeholder;
                 }
 
-                $type = match ($value) {
+                $type = match (true) {
                     is_bool($value) => PDO::PARAM_BOOL,
                     is_null($value) => PDO::PARAM_NULL,
                     is_int($value) => PDO::PARAM_INT,
