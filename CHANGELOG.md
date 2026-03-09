@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities
 
+## [5.4.4] = 2026.03.09
+
+### Fixed
+
+- Fixed bug in `match` expression in `bindParams` method of `Db` class 
+- Fixed bug in `is_function` method of `Query` class
+
 ## [5.4.3] - 2024.12.23
 
 ### Added
