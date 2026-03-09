@@ -213,10 +213,13 @@ class Query
         ];
 
         $value_upper = strtoupper($value);
+
         foreach ($mysql_fxs as $fn) {
+
             if (str_starts_with($value_upper, $fn . '(')) {
                 return true;
             }
+
         }
 
         return false;
