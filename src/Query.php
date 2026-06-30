@@ -146,6 +146,62 @@ class Query
 
     }
 
+    // See: https://dev.mysql.com/doc/refman/8.0/en/built-in-function-reference.html
+    private const MYSQL_FUNCTIONS = [
+        'ABS' => true,
+        'ADDDATE' => true,
+        'ADDTIME' => true,
+        'AVG' => true,
+        'BIN' => true,
+        'BIN_TO_UUID' => true,
+        'CAST' => true,
+        'CEIL' => true,
+        'CEILING' => true,
+        'CONVERT' => true,
+        'CONVERT_TZ' => true,
+        'COUNT' => true,
+        'CURDATE' => true,
+        'CURRENT_DATE' => true,
+        'CURRENT_TIME' => true,
+        'CURRENT_TIMESTAMP' => true,
+        'CURTIME' => true,
+        'DATE' => true,
+        'DATE_ADD' => true,
+        'DATE_FORMAT' => true,
+        'DATE_SUB' => true,
+        'DATEDIFF' => true,
+        'EXTRACT' => true,
+        'FLOOR' => true,
+        'FORMAT' => true,
+        'GREATEST' => true,
+        'HEX' => true,
+        'IN' => true,
+        'JSON_CONTAINS' => true,
+        'JSON_CONTAINS_PATH' => true,
+        'JSON_EXTRACT' => true,
+        'JSON_INSERT' => true,
+        'JSON_REMOVE' => true,
+        'JSON_SEARCH' => true,
+        'JSON_SET' => true,
+        'MATCH' => true,
+        'MAX' => true,
+        'MD5' => true,
+        'NOW' => true,
+        'RAND' => true,
+        'ROUND' => true,
+        'SUM' => true,
+        'TIME' => true,
+        'TIME_FORMAT' => true,
+        'TIME_TO_SEC' => true,
+        'TIMEDIFF' => true,
+        'TIMESTAMP' => true,
+        'TIMESTAMPADD' => true,
+        'TIMESTAMPDIFF' => true,
+        'UUID' => true,
+        'UUID_SHORT' => true,
+        'UUID_TO_BIN' => true,
+    ];
+
     /**
      * Is value a MySQL function?
      *
@@ -155,74 +211,15 @@ class Query
     private function is_function(string $value): bool
     {
 
-        // See: https://dev.mysql.com/doc/refman/8.0/en/built-in-function-reference.html
+        $paren_pos = strpos($value, '(');
 
-        $mysql_fxs = [
-            'ABS',
-            'ADDDATE',
-            'ADDTIME',
-            'AVG',
-            'BIN',
-            'BIN_TO_UUID',
-            'CAST',
-            'CEIL',
-            'CEILING',
-            'CONVERT',
-            'CONVERT_TZ',
-            'COUNT',
-            'CURDATE',
-            'CURRENT_DATE',
-            'CURRENT_TIME',
-            'CURRENT_TIMESTAMP',
-            'CURTIME',
-            'DATE',
-            'DATE_ADD',
-            'DATE_FORMAT',
-            'DATE_SUB',
-            'DATEDIFF',
-            'EXTRACT',
-            'FLOOR',
-            'FORMAT',
-            'GREATEST',
-            'HEX',
-            'IN',
-            'JSON_CONTAINS',
-            'JSON_CONTAINS_PATH',
-            'JSON_EXTRACT',
-            'JSON_INSERT',
-            'JSON_REMOVE',
-            'JSON_SEARCH',
-            'JSON_SET',
-            'MATCH',
-            'MAX',
-            'MD5',
-            'NOW',
-            'RAND',
-            'ROUND',
-            'SUM',
-            'TIME',
-            'TIME_FORMAT',
-            'TIME_TO_SEC',
-            'TIMEDIFF',
-            'TIMESTAMP',
-            'TIMESTAMPADD',
-            'TIMESTAMPDIFF',
-            'UUID',
-            'UUID_SHORT',
-            'UUID_TO_BIN'
-        ];
-
-        $value_upper = strtoupper($value);
-
-        foreach ($mysql_fxs as $fn) {
-
-            if (str_starts_with($value_upper, $fn . '(')) {
-                return true;
-            }
-
+        if ($paren_pos === false) {
+            return false;
         }
 
-        return false;
+        $fn_name = strtoupper(substr($value, 0, $paren_pos));
+
+        return isset(self::MYSQL_FUNCTIONS[$fn_name]);
 
     }
 
@@ -292,6 +289,31 @@ class Query
     public const CONDITION_AND = 'AND';
     public const CONDITION_OR = 'OR';
 
+    private const VALID_OPERATORS = [
+        self::OPERATOR_EQUALS => true,
+        self::OPERATOR_DOES_NOT_EQUAL => true,
+        self::OPERATOR_LESS_THAN => true,
+        self::OPERATOR_GREATER_THAN => true,
+        self::OPERATOR_LESS_THAN_OR_EQUAL => true,
+        self::OPERATOR_GREATER_THAN_OR_EQUAL => true,
+        self::OPERATOR_STARTS_WITH => true,
+        self::OPERATOR_DOES_NOT_START_WITH => true,
+        self::OPERATOR_STARTS_WITH_INSENSITIVE => true,
+        self::OPERATOR_DOES_NOT_START_WITH_INSENSITIVE => true,
+        self::OPERATOR_ENDS_WITH => true,
+        self::OPERATOR_DOES_NOT_END_WITH => true,
+        self::OPERATOR_ENDS_WITH_INSENSITIVE => true,
+        self::OPERATOR_DOES_NOT_END_WITH_INSENSITIVE => true,
+        self::OPERATOR_HAS => true,
+        self::OPERATOR_DOES_NOT_HAVE => true,
+        self::OPERATOR_HAS_INSENSITIVE => true,
+        self::OPERATOR_DOES_NOT_HAVE_INSENSITIVE => true,
+        self::OPERATOR_IN => true,
+        self::OPERATOR_NOT_IN => true,
+        self::OPERATOR_NULL => true,
+        self::OPERATOR_NOT_NULL => true,
+    ];
+
     /**
      * @param string $condition (and/or)
      * @param string $column
@@ -311,30 +333,7 @@ class Query
             $condition = ' ' . $condition . ' ';
         }
 
-        if (!in_array($operator, [
-            self::OPERATOR_EQUALS,
-            self::OPERATOR_DOES_NOT_EQUAL,
-            self::OPERATOR_LESS_THAN,
-            self::OPERATOR_GREATER_THAN,
-            self::OPERATOR_LESS_THAN_OR_EQUAL,
-            self::OPERATOR_GREATER_THAN_OR_EQUAL,
-            self::OPERATOR_STARTS_WITH,
-            self::OPERATOR_DOES_NOT_START_WITH,
-            self::OPERATOR_STARTS_WITH_INSENSITIVE,
-            self::OPERATOR_DOES_NOT_START_WITH_INSENSITIVE,
-            self::OPERATOR_ENDS_WITH,
-            self::OPERATOR_DOES_NOT_END_WITH,
-            self::OPERATOR_ENDS_WITH_INSENSITIVE,
-            self::OPERATOR_DOES_NOT_END_WITH_INSENSITIVE,
-            self::OPERATOR_HAS,
-            self::OPERATOR_DOES_NOT_HAVE,
-            self::OPERATOR_HAS_INSENSITIVE,
-            self::OPERATOR_DOES_NOT_HAVE_INSENSITIVE,
-            self::OPERATOR_IN,
-            self::OPERATOR_NOT_IN,
-            self::OPERATOR_NULL,
-            self::OPERATOR_NOT_NULL
-        ])) {
+        if (!isset(self::VALID_OPERATORS[$operator])) {
             throw new QueryException('Unable to build query: invalid operator (' . $operator . ') for column (' . $column . ')');
         }
 
