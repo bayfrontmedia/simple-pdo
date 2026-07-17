@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fixed` for any bug fixes.
 - `Security` in case of vulnerabilities
 
+## [5.4.5] - 2026.07.17
+
+### Changed
+
+- Updated `exists` method of `Db` class to use `SELECT 1` instead of using the `count` method for better performance
+
 ## [5.4.4] - 2026.03.09
 
 ### Fixed
