@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Miscellaneous performance improvements
+- Updated `exists` method of `Db` class to use `SELECT 1` instead of using the `count` method for better performance
 
 ## [5.4.4] - 2026.03.09
 

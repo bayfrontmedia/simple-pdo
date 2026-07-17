@@ -619,11 +619,56 @@ class Db
     public function exists(string $table, array $conditions = []): bool
     {
 
-        if ($this->count($table, $conditions) > 0) {
-            return true;
+        $this->reset();
+
+        $query = 'SELECT 1 FROM ' . $table;
+
+        $raw_query = $query;
+
+        if (!empty($conditions)) {
+
+            $query .= ' WHERE ';
+
+            $raw_query .= ' WHERE ';
+
+            foreach ($conditions as $k => $v) {
+
+                if ($v === null) {
+
+                    $query .= $k . ' IS NULL AND ';
+                    $raw_query .= $k . ' IS NULL AND ';
+                    unset($conditions[$k]);
+
+                } else {
+
+                    $query .= $k . '=? AND ';
+                    $raw_query .= $k . '=' . $v . ' AND ';
+
+                }
+
+            }
+
+            $query = rtrim($query, ' AND');
+
+            $raw_query = rtrim($raw_query, ' AND');
+
         }
 
-        return false;
+        $query .= ' LIMIT 1';
+
+        $raw_query .= ' LIMIT 1';
+
+        $this->raw_query = $raw_query; // Save raw query
+
+        $this->stmt = $this->prepare($query);
+
+        $this->stmt->execute(array_values($conditions));
+
+        $return = $this->stmt->fetchColumn() !== false;
+
+        $this->query_durations[$this->current_db_name][] = microtime(true) - $this->query_start; // Record query duration
+
+        return $return;
 
     }
 
